@@ -7,7 +7,7 @@ spec:
   modelImagePullPolicy: <model_image_pull_policy>
   trainingImage: <training_image>
   trainingImagePullPolicy: <training_image_pull_policy>
-  epochs: <epochs>
+  epochs: 5
   preprocessedDatasetLocation: <dataset_location>
   splitDatasetLocation: <dataset_location>
   modelsLocation: <models_location>

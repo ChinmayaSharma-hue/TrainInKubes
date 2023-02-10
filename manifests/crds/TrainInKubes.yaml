@@ -31,19 +31,20 @@ spec:
                   type: string
                 modelsLocation:
                   type: string
-          required:
-            - modelImage
-            - modelImagePullPolicy
-            - trainingImage
-            - trainingImagePullPolicy
-            - epochs
-            - preprocessedDatasetLocation
-            - splitDatasetLocation
-            - modelsLocation
+              allOf:
+                - required:
+                  - modelImage
+                  - modelImagePullPolicy
+                  - trainingImage
+                  - trainingImagePullPolicy
+                  - epochs
+                  - preprocessedDatasetLocation
+                  - splitDatasetLocation
+                  - modelsLocation
   scope: Namespaced
   names:
     plural: traininkubes
     singular: traininkube
     kind: TrainInKube
-    shortnames:
+    shortNames:
     - tik
