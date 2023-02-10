@@ -1,0 +1,14 @@
+apiVersion: trainink8s.com/v1alpha1
+kind: TrainInKube
+metadata:
+  name: t1
+spec:
+  modelImage: <model_image>
+  modelImagePullPolicy: <model_image_pull_policy>
+  trainingImage: <training_image>
+  trainingImagePullPolicy: <training_image_pull_policy>
+  epochs: <epochs>
+  preprocessedDatasetLocation: <dataset_location>
+  splitDatasetLocation: <dataset_location>
+  modelsLocation: <models_location>
+  
