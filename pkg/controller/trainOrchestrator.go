@@ -21,7 +21,7 @@ func (t *TrainOrchestrator) Run(stopCh <-chan struct{}) {
 	t.logger.Infof("Starting the job orchestrator...")
 
 	select {
-	case <-done:
+	case <-stopCh:
 		fmt.Println("Orchestrator stopped.")
 	}
 }
