@@ -112,6 +112,8 @@ func (c *Controller) processAddConfigMap(ctx context.Context, trainInKube *train
 		eventType: addBuildModel,
 		newObj:    created_job,
 	})
+
+	return nil
 }
 
 func resourceExists(obj interface{}, indexer cache.Indexer) (bool, error) {

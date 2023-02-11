@@ -76,10 +76,9 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 					{
 						Name: trainInKube.Name + "_volume",
 						VolumeSource: corev1.VolumeSource{
-							&corev1.HostPath{
+							HostPath: &corev1.HostPathVolumeSource{
 								Path: configmap.Data["modelsLocation"],
 							},
-						},
 					},
 				},
 				RestartPolicy: corev1.RestartPolicyNever,
