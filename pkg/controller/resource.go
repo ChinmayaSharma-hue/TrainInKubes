@@ -57,12 +57,12 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 					{
 						Name:            trainInKube.Name,
 						Image:           trainInKube.Spec.TrainingImage,
-						ImagePullPolicy: corev1.PullPolicy(trainInKube.Spec.ModelImagePullPolicy)
+						ImagePullPolicy: corev1.PullPolicy(trainInKube.Spec.ModelImagePullPolicy),
 						VolumeMounts: []corev1.VolumeMount{
 							{
 								Name:      trainInKube.Name + "_volume",
 								MountPath: "/data",
-							},
+							}
 						},
 						Env: []corev1.EnvVar{
 							{
