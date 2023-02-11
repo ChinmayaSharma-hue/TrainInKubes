@@ -56,7 +56,7 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 				Containers: []corev1.Container{
 					{
 						Name:            trainInKube.Name,
-						Image:           trainInKube.Spec.TrainingImage,
+						Image:           trainInKube.Spec.ModelImage,
 						ImagePullPolicy: corev1.PullPolicy(trainInKube.Spec.ModelImagePullPolicy),
 						VolumeMounts: []corev1.VolumeMount{
 							{
