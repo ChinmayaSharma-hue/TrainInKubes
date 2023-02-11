@@ -1,5 +1,7 @@
 package controller
 
+import traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
+
 type eventType string
 
 const (
@@ -10,5 +12,6 @@ const (
 
 type event struct {
 	eventType      eventType
-	oldObj, newObj interface{}
+	newObj         interface{}
+	customResource *traininkubev1alpha1.TrainInKube
 }

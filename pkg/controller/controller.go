@@ -85,8 +85,8 @@ func (c *Controller) addTrainInKube(obj interface{}) {
 	}
 
 	c.queue.Add(event{
-		eventType: addTrainInKube,
-		newObj:    traininkube,
+		eventType:      addTrainInKube,
+		customResource: traininkube,
 	})
 }
 

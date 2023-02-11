@@ -6,7 +6,6 @@ import (
 
 	traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
 
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	cache "k8s.io/client-go/tools/cache"
@@ -53,12 +52,13 @@ func (c *Controller) processItem(ctx context.Context, obj interface{}) error {
 	switch event.eventType {
 	case addTrainInKube:
 		c.logger.Debugf("Processing the addTrainInKube event")
-		return c.processAddTrainInKube(ctx, event.newObj.(*traininkubev1alpha1.TrainInKube))
+		return c.processAddTrainInKube(ctx, event.customResource)
 	case addConfigMap:
 		c.logger.Debugf("Processing the addConfigMap event")
-		return c.processAddConfigMap(ctx, event.oldObj.(*traininkubev1alpha1.TrainInKube), event.newObj.(*corev1.ConfigMap))
+		return c.processAddConfigMap(ctx, event.customResource)
 	case addBuildModel:
 		c.logger.Debugf("Processing the addBuildModel event")
+
 	}
 
 	return nil
@@ -81,9 +81,8 @@ func (c *Controller) processAddTrainInKube(ctx context.Context, trainInKube *tra
 
 	// Add an event to the TrainInKube signalling the end of creation of CongigMap
 	c.queue.Add(event{
-		eventType: addConfigMap,
-		newObj:    createdConfigMap,
-		oldObj:    trainInKube,
+		eventType:      addConfigMap,
+		customResource: trainInKube,
 	})
 
 	return err
@@ -92,8 +91,15 @@ func (c *Controller) processAddTrainInKube(ctx context.Context, trainInKube *tra
 func (c *Controller) processAddConfigMap(
 	ctx context.Context,
 	trainInKube *traininkubev1alpha1.TrainInKube,
-	configmap *corev1.ConfigMap,
 ) error {
+	// Query the kubernetes server for the ConfigMap
+	// If the ConfigMap is not found, requeue the event
+	// If the ConfigMap is found, create a Job to build the model
+	configMap, err := c.kubeClientSet.CoreV1().ConfigMaps(c.namespace).Get(ctx, traininKube.Name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("Error while getting the ConfigMap: %v", err)
+	}
+
 	// Create a Job to build the model
 	job := createJob(trainInKube, configmap, c.namespace)
 
@@ -113,12 +119,16 @@ func (c *Controller) processAddConfigMap(
 
 	// Add an event to the TrainInKube signalling the end of creation of Job
 	c.queue.Add(event{
-		eventType: addBuildModel,
-		newObj:    created_job,
+		eventType:      addBuildModel,
+		customResource: trainInKube,
 	})
 
 	return nil
 }
+
+// func (c *Controller) processAddBuildModel(ctx contex.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
+// 	// Needs to run
+// }
 
 func resourceExists(obj interface{}, indexer cache.Indexer) (bool, error) {
 	key, err := cache.MetaNamespaceKeyFunc(obj)

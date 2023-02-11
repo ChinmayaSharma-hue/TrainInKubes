@@ -42,7 +42,7 @@ func createJob(trainInKube *traininkubev1alpha1.TrainInKube, configmap *corev1.C
 	}
 }
 
-// Maybe experiment with interfaces and mutable behaviors observed in Kind here to change behavior based on option like
+// TODO : Maybe experiment with interfaces and mutable behaviors observed in Kind here to change behavior based on option like
 // create job spec with host volume or with s3 volume or other cloud storage volumes
 func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *corev1.ConfigMap, namespace string) batchv1.JobSpec {
 	return batchv1.JobSpec{
@@ -55,8 +55,9 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name:            trainInKube.Name,
-						Image:           trainInKube.Spec.ModelImage,
+						Name:  trainInKube.Name,
+						Image: trainInKube.Spec.ModelImage,
+						// TODO : Have to remove the hardcoding of ImagePullPolicy later
 						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
 						VolumeMounts: []corev1.VolumeMount{
 							{
