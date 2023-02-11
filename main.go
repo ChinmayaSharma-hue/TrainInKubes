@@ -84,4 +84,9 @@ func main() {
 		syscall.SIGHUP,
 	}...)
 	defer cancel()
+
+	err = ctrl.Run(ctx)
+	if err != nil {
+		logger.Fatal("Error running controller ", err)
+	}
 }
