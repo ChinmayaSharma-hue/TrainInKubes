@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"context"
+	"fmt"
 
 	"github.com/gotway/gotway/pkg/log"
 	"k8s.io/client-go/kubernetes"
@@ -17,8 +17,11 @@ type TrainOrchestrator struct {
 	logger log.Logger
 }
 
-func (t *TrainOrchestrator) Run(ctx context.Context) {
+func (t *TrainOrchestrator) Run(stopCh <-chan struct{}) {
 	t.logger.Infof("Starting the job orchestrator...")
-	// Will think about the ctx.Done() later
-	<-ctx.Done()
+
+	select {
+	case <-done:
+		fmt.Println("Orchestrator stopped.")
+	}
 }
