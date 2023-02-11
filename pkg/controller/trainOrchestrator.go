@@ -10,7 +10,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	cache "k8s.io/client-go/tools/cache"
 )
 
 type TrainOrchestrator struct {
@@ -19,40 +18,47 @@ type TrainOrchestrator struct {
 	jobInformer   cache.SharedIndexInformer
 	nodeInformer  cache.SharedIndexInformer
 
+	namespace string
+
 	logger log.Logger
 }
 
-func (t *TrainOrchestrator) Run(ctx context.Context) {
+func (t *TrainOrchestrator) Run(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) {
 	t.logger.Infof("Starting the job orchestrator...")
 
-	err := Orchestrate(ctx)
+	err := t.Orchestrate(ctx, trainInKube)
 	if err != nil {
 		t.logger.Errorf("Error while orchestrating the jobs: %v", err)
 	}
 }
 
-func (t *TrainOrchestrator) Orchestrate(ctx context.Context) error {
+func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
+	configmap, err := c.kubeClientSet.CoreV1().ConfigMaps(t.namespace).Get(ctx, trainInKube.Name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("Error while getting the ConfigMap: %v", err)
+	}
+
 	// Create a job that divides the data between the jobs
 	// Find a way to use the same function or something to create jobs that
 	// creates different job objects based on the options passed to it
-	job := createSplitJob(t.trainInKube, string(5))
+	job := createSplitJob(t.trainInKube, string(5), configmap, t.namespace)
 
-	exists, err := resourceExists(job, c.jobInformer.GetIndexer())
+	exists, err := resourceExists(job, t.jobInformer.GetIndexer())
 	if err != nil {
 		return fmt.Errorf("Error while checking if the Job already exists: %v", err)
 	}
 	if exists {
-		c.logger.Infof("Job already exists, skipping creation")
+		t.logger.Infof("Job already exists, skipping creation")
 		return nil
 	}
 
-	created_job, err := c.kubeClientSet.BatchV1().Jobs(c.namespace).Create(ctx, job, metav1.CreateOptions{})
+	created_job, err := t.kubeClientSet.BatchV1().Jobs(c.namespace).Create(ctx, job, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("Error while creating the Job: %v", err)
 	}
 
 	// Block the function till the job finishes execution
-	err = waitForJobToFinish(created_job)
+	err = waitForJobToFinish(created_job, t.jobInformer)
 	if err != nil {
 		return fmt.Errorf("Error while waiting for the Job to finish: %v", err)
 	}
@@ -73,7 +79,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context) error {
 	return nil
 }
 
-func waitForJobToFinish(job *batchv1.Job) error {
+func waitForJobToFinish(job *batchv1.Job, jobInformer cache.SharedIndexInformer) error {
 	key, err := cache.MetaNamespaceKeyFunc(job)
 
 	if err != nil {
@@ -81,7 +87,7 @@ func waitForJobToFinish(job *batchv1.Job) error {
 	}
 
 	for {
-		jobObject, exists, err := t.jobInformer.GetIndexer().GetByKey(key)
+		jobObject, exists, err := jobInformer.GetIndexer().GetByKey(key)
 		if err != nil {
 			return err
 		}

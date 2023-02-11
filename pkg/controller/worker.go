@@ -134,11 +134,12 @@ func (c *Controller) processAddBuildModel(ctx context.Context, trainInKube *trai
 		trainInKube:   trainInKube,
 		jobInformer:   c.jobInformer,
 		nodeInformer:  c.nodeInformer,
+		namespace:     c.namespace,
 		logger:        c.logger,
 	}
 
 	// Start the TrainOrchestrator
-	go torch.Run(ctx)
+	go torch.Run(ctx, trainInKube)
 
 	return nil
 }
