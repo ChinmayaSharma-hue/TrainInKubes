@@ -6,6 +6,7 @@ import (
 
 	traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	cache "k8s.io/client-go/tools/cache"
@@ -55,7 +56,7 @@ func (c *Controller) processItem(ctx context.Context, obj interface{}) error {
 		return c.processAddTrainInKube(ctx, event.newObj.(*traininkubev1alpha1.TrainInKube))
 	case addConfigMap:
 		c.logger.Debugf("Processing the addConfigMap event")
-		return c.processAddConfigMap(ctx, event.newObj.(*traininkubev1alpha1.TrainInKube))
+		return c.processAddConfigMap(ctx, event.oldObj.(*traininkubev1alpha1.TrainInKube), event.newObj.(*corev1.ConfigMap))
 	case addBuildModel:
 		c.logger.Debugf("Processing the addBuildModel event")
 	}
@@ -82,17 +83,17 @@ func (c *Controller) processAddTrainInKube(ctx context.Context, trainInKube *tra
 	c.queue.Add(event{
 		eventType: addConfigMap,
 		newObj:    createdConfigMap,
+		oldObj:    trainInKube,
 	})
 
 	return err
 }
 
-func (c *Controller) processAddConfigMap(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
-	// Get the ConfigMap to get the location to store the model
-	configmap, err := c.kubeClientSet.CoreV1().ConfigMaps(c.namespace).Get(ctx, trainInKube.Name, metav1.GetOptions{})
-	if err != nil {
-		return fmt.Errorf("Error while getting the ConfigMap: %v", err)
-	}
+func (c *Controller) processAddConfigMap(
+		ctx context.Context, 
+		trainInKube *traininkubev1alpha1.TrainInKube, 
+		configmap *corev1.ConfigMap
+	) error {
 	// Create a Job to build the model
 	job := createJob(trainInKube, configmap, c.namespace)
 
