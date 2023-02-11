@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"strconv"
+
 	traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -166,6 +168,103 @@ func createSplitJobSpec(
 			},
 		},
 	}
+}
+
+func createTrainJob(
+	trainInKube *traininkubev1alpha1.TrainInKube,
+	namespace string,
+	index int,
+	startingIndex int,
+	endingIndex int,
+) *batchv1.Job {
+	return &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			// Concatenate the trainInKube name and the string "_build_model" to create the job name
+			Name:      trainInKube.ObjectMeta.Name + "trainmodel",
+			Namespace: namespace,
+			Labels:    make(map[string]string),
+			OwnerReferences: []metav1.OwnerReference{
+				*metav1.NewControllerRef(trainInKube, traininkubev1alpha1.SchemeGroupVersion.WithKind("TrainInKube")),
+			},
+		},
+		Spec: createTrainJobSpec(trainInKube, namespace, index, startingIndex, endingIndex),
+	}
+}
+
+func createTrainJobSpec(
+	trainInKube *traininkubev1alpha1.TrainInKube,
+	namespace string,
+	index int,
+	startingIndex int,
+	endingIndex int,
+) batchv1.JobSpec {
+	return batchv1.JobSpec{
+		Template: corev1.PodTemplateSpec{
+			ObjectMeta: metav1.ObjectMeta{
+				GenerateName: trainInKube.Name + "-",
+				Namespace:    namespace,
+				Labels:       make(map[string]string),
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name:  trainInKube.Name,
+						Image: "trainjob:latest",
+						// TODO : Have to remove the hardcoding of ImagePullPolicy later
+						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								Name:      trainInKube.Name + "volume",
+								MountPath: "/data",
+							},
+						},
+						Env: []corev1.EnvVar{
+							{
+								Name:  "MODEL_LOCATION",
+								Value: "/data/model.h5",
+							},
+							{
+								Name:  "GRADIENT_LOCATION",
+								Value: "/data/Gradients",
+							},
+							{
+								Name:  "FEATURES_LOCATION",
+								Value: "/data/Chunks/x_train_" + strconv.Itoa(index) + ".npy",
+							},
+							{
+								Name:  "LABELS_LOCATION",
+								Value: "/data/Chunks/y_train_" + strconv.Itoa(index) + ".npy",
+							},
+							{
+								Name:  "STARTING_INDEX",
+								Value: strconv.Itoa(startingIndex),
+							},
+							{
+								Name:  "ENDING_INDEX",
+								Value: strconv.Itoa(endingIndex),
+							},
+							{
+								Name:  "JOB_INDEX",
+								Value: strconv.Itoa(index),
+							},
+						},
+					},
+				},
+				Volumes: []corev1.Volume{
+					{
+						Name: trainInKube.Name + "volume",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/data",
+							},
+						},
+					},
+				},
+				RestartPolicy: corev1.RestartPolicyNever,
+			},
+		},
+	}
+
 }
 
 // Define different functions that are then used to set different options in a struct that is
