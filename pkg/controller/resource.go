@@ -62,7 +62,7 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 							{
 								Name:      trainInKube.Name + "_volume",
 								MountPath: "/data",
-							}
+							},
 						},
 						Env: []corev1.EnvVar{
 							{
