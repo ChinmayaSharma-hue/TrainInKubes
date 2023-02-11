@@ -84,6 +84,6 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 				},
 				RestartPolicy: corev1.RestartPolicyNever,
 			},
-		}
+		},
 	}
 }
