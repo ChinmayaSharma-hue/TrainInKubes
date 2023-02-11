@@ -18,10 +18,10 @@ func createConfigMap(trainInKube *traininkubev1alpha1.TrainInKube, namespace str
 			},
 		},
 		Data: map[string]string{
-			"epochs":                      trainInKube.Spec.Epochs,
-			"preprocessedDatasetLocation": trainInKube.Spec.preprocessedDatasetLocation,
-			"splitDatasetLocation":        trainInKube.Spec.splitDatasetLocation,
-			"modelsLocation":              trainInKube.Spec.modelsLocation,
+			"epochs":                      string(trainInKube.Spec.Epochs),
+			"preprocessedDatasetLocation": trainInKube.Spec.PreprocessedDataLocation,
+			"splitDatasetLocation":        trainInKube.Spec.SplitDatasetLocation,
+			"modelsLocation":              trainInKube.Spec.ModelsLocation,
 		},
 	}
 }

@@ -17,7 +17,7 @@ func (c *Controller) runWorker(ctx context.Context) {
 	}
 }
 
-func (c *Controller) processNextItem(ctx context.Context) {
+func (c *Controller) processNextItem(ctx context.Context) bool {
 	obj, shutdown := c.queue.Get()
 
 	if shutdown {
@@ -52,8 +52,7 @@ func (c *Controller) processItem(ctx context.Context, obj interface{}) error {
 	switch event.eventType {
 	case addTrainInKube:
 		c.logger.Debugf("Processing the addTrainInKube event")
-		trainInKube, ok := event.newObj.(*traininkubev1alpha1.TrainInKube)
-		return c.processAddTrainInKube(ctx, trainInKube)
+		return c.processAddTrainInKube(ctx, event.newObj.(*traininkubev1alpha1.TrainInKube))
 	case addConfigMap:
 		c.logger.Debugf("Processing the addConfigMap event")
 	}
@@ -63,7 +62,7 @@ func (c *Controller) processItem(ctx context.Context, obj interface{}) error {
 
 func (c *Controller) processAddTrainInKube(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
 	// Create a ConfigMap for the TrainInKube
-	configmap := createConfigMap(trainInKube, c.Namespace)
+	configmap := createConfigMap(trainInKube, c.namespace)
 
 	exists, err := resourceExists(configmap, c.confgmapInformer.GetIndexer())
 	if err != nil {
@@ -74,7 +73,7 @@ func (c *Controller) processAddTrainInKube(ctx context.Context, trainInKube *tra
 		return nil
 	}
 
-	createConfigMap, err := c.kubeClient.CoreV1().ConfigMaps(c.Namespace).Create(ctx, configmap, metav1.CreateOptions{})
+	createConfigMap, err := c.kubeClientSet.CoreV1().ConfigMaps(c.namespace).Create(ctx, configmap, metav1.CreateOptions{})
 
 	// Add an event to the TrainInKube signalling the end of creation of CongigMap
 	c.queue.Add(event{
