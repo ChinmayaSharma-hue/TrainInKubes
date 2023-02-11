@@ -3,6 +3,7 @@ package controller
 import (
 	traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
 
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -47,19 +48,19 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 	return batchv1.JobSpec{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				GenerateName: name + "-",
+				GenerateName: trainInKube.Name + "-",
 				Namespace:    namespace,
 				Labels:       make(map[string]string),
 			},
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name:            name,
+						Name:            trainInKube.Name,
 						Image:           trainInKube.Spec.TrainingImage,
-						ImagePullPolicy: trainInKube.Spec.ModelImagePullPolicy,
+						ImagePullPolicy: corev1.PullPolicy(trainInKube.Spec.ModelImagePullPolicy)
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name:      name + "_volume",
+								Name:      trainInKube.Name + "_volume",
 								MountPath: "/data",
 							},
 						},
@@ -73,9 +74,9 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 				},
 				Volumes: []corev1.Volume{
 					{
-						Name: name + "_volume",
+						Name: trainInKube.Name + "_volume",
 						VolumeSource: corev1.VolumeSource{
-							&corev1.HostpathVolumeSource{
+							&corev1.HostPath{
 								Path: configmap.Data["modelsLocation"],
 							},
 						},
