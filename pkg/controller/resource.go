@@ -55,19 +55,19 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 				Containers: []corev1.Container{
 					{
 						Name:            name,
-						Image: 		 trainInKube.Spec.TrainingImage,
+						Image:           trainInKube.Spec.TrainingImage,
 						ImagePullPolicy: trainInKube.Spec.ModelImagePullPolicy,
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name: 	name + "_volume",
+								Name:      name + "_volume",
 								MountPath: "/data",
 							},
 						},
 						Env: []corev1.EnvVar{
 							{
-								Name: "MODEL_STORAGE_LOCATION",
+								Name:  "MODEL_STORAGE_LOCATION",
 								Value: "/data",
-							}
+							},
 						},
 					},
 				},
@@ -76,13 +76,13 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 						Name: name + "_volume",
 						VolumeSource: corev1.VolumeSource{
 							&corev1.HostpathVolumeSource{
-								Path: configmap.Data["modelsLocation"]
-							}
+								Path: configmap.Data["modelsLocation"],
+							},
 						},
 					},
-				}
+				},
 				RestartPolicy: corev1.RestartPolicyNever,
-			}
-		}
+			},
+		},
 	}
 }
