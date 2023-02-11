@@ -107,6 +107,9 @@ func (c *Controller) processAddConfigMap(
 	}
 
 	created_job, err := c.kubeClientSet.BatchV1().Jobs(c.namespace).Create(ctx, job, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("Error while creating the Job: %v", err)
+	}
 
 	// Add an event to the TrainInKube signalling the end of creation of Job
 	c.queue.Add(event{
