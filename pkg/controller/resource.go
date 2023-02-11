@@ -91,11 +91,11 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 }
 
 func createSplitJob(
-		trainInKube *traininkubev1alpha1.TrainInKube, 
-		NumberOfJobs string, 
-		configmap *corev1.ConfigMap, 
-		namespace string
-	) *batchv1.Job {
+	trainInKube *traininkubev1alpha1.TrainInKube,
+	NumberOfJobs string,
+	configmap *corev1.ConfigMap,
+	namespace string,
+) *batchv1.Job {
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			// Concatenate the trainInKube name and the string "_build_model" to create the job name
@@ -111,11 +111,11 @@ func createSplitJob(
 }
 
 func createSplitJobSpec(
-		trainInKube *traininkubev1alpha1.TrainInKube, 
-		NumberOfJobs string, 
-		configmap *corev1.ConfigMap, 
-		namespace string
-	) batchv1.JobSpec {
+	trainInKube *traininkubev1alpha1.TrainInKube,
+	NumberOfJobs string,
+	configmap *corev1.ConfigMap,
+	namespace string,
+) batchv1.JobSpec {
 	return batchv1.JobSpec{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
