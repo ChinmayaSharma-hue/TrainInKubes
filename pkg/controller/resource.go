@@ -31,7 +31,7 @@ func createJob(trainInKube *traininkubev1alpha1.TrainInKube, configmap *corev1.C
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			// Concatenate the trainInKube name and the string "_build_model" to create the job name
-			Name:      trainInKube.ObjectMeta.Name + "_build_model",
+			Name:      trainInKube.ObjectMeta.Name + "buildmodel",
 			Namespace: namespace,
 			Labels:    make(map[string]string),
 			OwnerReferences: []metav1.OwnerReference{
@@ -60,7 +60,7 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 						ImagePullPolicy: corev1.PullPolicy(trainInKube.Spec.ModelImagePullPolicy),
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name:      trainInKube.Name + "_volume",
+								Name:      trainInKube.Name + "volume",
 								MountPath: "/data",
 							},
 						},
@@ -74,7 +74,7 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 				},
 				Volumes: []corev1.Volume{
 					{
-						Name: trainInKube.Name + "_volume",
+						Name: trainInKube.Name + "volume",
 						VolumeSource: corev1.VolumeSource{
 							HostPath: &corev1.HostPathVolumeSource{
 								Path: configmap.Data["modelsLocation"],
