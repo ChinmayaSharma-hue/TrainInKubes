@@ -43,7 +43,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	// Create a job that divides the data between the jobs
 	// Find a way to use the same function or something to create jobs that
 	// creates different job objects based on the options passed to it
-	job := createSplitJob(t.trainInKube, strconv.Itoa(5), configmap, t.namespace)
+	job := createSplitJob(t.trainInKube, strconv.Itoa(6), configmap, t.namespace)
 
 	exists, err := resourceExists(job, t.jobInformer.GetIndexer())
 	if err != nil {
