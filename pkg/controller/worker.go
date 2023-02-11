@@ -90,10 +90,10 @@ func (c *Controller) processAddTrainInKube(ctx context.Context, trainInKube *tra
 }
 
 func (c *Controller) processAddConfigMap(
-		ctx context.Context, 
-		trainInKube *traininkubev1alpha1.TrainInKube, 
-		configmap *corev1.ConfigMap
-	) error {
+	ctx context.Context,
+	trainInKube *traininkubev1alpha1.TrainInKube,
+	configmap *corev1.ConfigMap,
+) error {
 	// Create a Job to build the model
 	job := createJob(trainInKube, configmap, c.namespace)
 
