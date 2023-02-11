@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"fmt"
-
 	traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -47,7 +45,6 @@ func createJob(trainInKube *traininkubev1alpha1.TrainInKube, configmap *corev1.C
 // Maybe experiment with interfaces and mutable behaviors observed in Kind here to change behavior based on option like
 // create job spec with host volume or with s3 volume or other cloud storage volumes
 func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *corev1.ConfigMap, namespace string) batchv1.JobSpec {
-	fmt.Println("Model image is: ", trainInKube.Spec.ModelImage)
 	return batchv1.JobSpec{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
@@ -59,7 +56,7 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 				Containers: []corev1.Container{
 					{
 						Name:            trainInKube.Name,
-						Image:           trainInKube.Spec.ModelImage,
+						Image:           "buildjob:latest",
 						ImagePullPolicy: corev1.PullPolicy(trainInKube.Spec.ModelImagePullPolicy),
 						VolumeMounts: []corev1.VolumeMount{
 							{
