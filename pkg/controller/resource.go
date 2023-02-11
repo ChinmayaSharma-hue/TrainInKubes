@@ -20,7 +20,7 @@ func createConfigMap(trainInKube *traininkubev1alpha1.TrainInKube, namespace str
 		},
 		Data: map[string]string{
 			"epochs":                      string(trainInKube.Spec.Epochs),
-			"batchSize":				   string(trainInKube.Spec.BatchSize)
+			"batchSize":                   string(trainInKube.Spec.BatchSize),
 			"preprocessedDatasetLocation": trainInKube.Spec.PreprocessedDataLocation,
 			"splitDatasetLocation":        trainInKube.Spec.SplitDatasetLocation,
 			"modelsLocation":              trainInKube.Spec.ModelsLocation,
@@ -132,14 +132,14 @@ func createSplitJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, NumberOfJo
 								Value: NumberOfJobs,
 							},
 							{
-								Name: "DATASET_LOCATION",
-								Value: "/data/PreprocessedData"
+								Name:  "DATASET_LOCATION",
+								Value: "/data/PreprocessedData",
 							},
 							{
-								Name: "SPLIT_LOCATION",
-								Value: "/data/Chunks"
+								Name:  "SPLIT_LOCATION",
+								Value: "/data/Chunks",
 							},
-						}
+						},
 					},
 				},
 				Volumes: []corev1.Volume{
@@ -161,8 +161,8 @@ func createSplitJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, NumberOfJo
 // Define different functions that are then used to set different options in a struct that is
 // used to store the different options. Like if the user/I? want to create a job that uses
 // hostPath volume, then define a function called CreateWithHostPathVolume() that sets the
-// HostPath struct in the option. This field needs to be optional - need to figure out how 
-// to set that also. 
+// HostPath struct in the option. This field needs to be optional - need to figure out how
+// to set that also.
 // Structs to define - Job Options, different struct types of different types of options inside
 // like HostPath options and stuff like that.
 // Functions to define - CreateWithHostPathVolume(), CreateWithS3Volume(), CreateWithGCSVolume()
