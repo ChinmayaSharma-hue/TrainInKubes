@@ -4,7 +4,7 @@ metadata:
   name: t1
 spec:
   modelImage: "buildjob:latest"
-  modelImagePullPolicy: "IfNotPresent"
+  modelImagePullPolicy: "Never"
   trainingImage: "training_image"
   trainingImagePullPolicy: "training_image_pull_policy"
   epochs: 5
