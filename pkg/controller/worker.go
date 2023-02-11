@@ -126,7 +126,7 @@ func (c *Controller) processAddConfigMap(
 	return nil
 }
 
-func (c *Controller) processAddBuildModel(ctx contex.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
+func (c *Controller) processAddBuildModel(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
 	// Create another struct that will be used to scale the jobs for training, monitors
 	// the resources available in the cluster, and periodically triggers the splitting job.
 	torch := &TrainOrchestrator{
