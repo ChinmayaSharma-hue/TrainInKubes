@@ -84,42 +84,42 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	// each epoch, and then after each epoch, create a job that takes in the
 	// gradients from each of the jobs and then performs averaging, finds the
 	// average gradient, and then updates the weights.
-	startingIndex := 0
-	endingIndex := 2
-	for i := 0; i < 1; i++ {
-		// Create a slice of jobs that will be created for each epoch
-		created_jobs := make([]*batchv1.Job, 5)
+	// startingIndex := 0
+	// endingIndex := 2
+	// for i := 0; i < 1; i++ {
+	// 	// Create a slice of jobs that will be created for each epoch
+	// 	created_jobs := make([]*batchv1.Job, 5)
 
-		for j := 0; j < 5; j++ {
-			job := createTrainJob(t.trainInKube, t.namespace, j, startingIndex, endingIndex)
+	// 	for j := 0; j < 5; j++ {
+	// 		job := createTrainJob(t.trainInKube, t.namespace, j, startingIndex, endingIndex)
 
-			exists, err := resourceExists(job, t.jobInformer.GetIndexer())
-			if err != nil {
-				return fmt.Errorf("Error while checking if the Job already exists: %v", err)
-			}
-			if exists {
-				t.logger.Infof("Job already exists, skipping creation")
-				return nil
-			}
+	// 		exists, err := resourceExists(job, t.jobInformer.GetIndexer())
+	// 		if err != nil {
+	// 			return fmt.Errorf("Error while checking if the Job already exists: %v", err)
+	// 		}
+	// 		if exists {
+	// 			t.logger.Infof("Job already exists, skipping creation")
+	// 			return nil
+	// 		}
 
-			created_job, err := t.kubeClientSet.BatchV1().Jobs(t.namespace).Create(ctx, job, metav1.CreateOptions{})
-			if err != nil {
-				return fmt.Errorf("Error while creating the Job: %v", err)
-			}
-			fmt.Println("Job Created!")
-			// Add the job to the slice of jobs
-			created_jobs[j] = created_job
-		}
+	// 		created_job, err := t.kubeClientSet.BatchV1().Jobs(t.namespace).Create(ctx, job, metav1.CreateOptions{})
+	// 		if err != nil {
+	// 			return fmt.Errorf("Error while creating the Job: %v", err)
+	// 		}
+	// 		fmt.Println("Job Created!")
+	// 		// Add the job to the slice of jobs
+	// 		created_jobs[j] = created_job
+	// 	}
 
-		// Wait until the execution of all the jobs finishes using go routines
-		wg.Add(5)
-		for _, job := range created_jobs {
-			go waitForJobToFinish(job, t.jobInformer)
-		}
-		wg.Wait()
+	// 	// Wait until the execution of all the jobs finishes using go routines
+	// 	wg.Add(5)
+	// 	for _, job := range created_jobs {
+	// 		go waitForJobToFinish(job, t.jobInformer)
+	// 	}
+	// 	wg.Wait()
 
-		t.logger.Infof("Finished executing all the jobs for epoch %d", i)
-	}
+	// 	t.logger.Infof("Finished executing all the jobs for epoch %d", i)
+	// }
 
 	// After the job finishes execution, do the same thing again from the start.
 	return nil
