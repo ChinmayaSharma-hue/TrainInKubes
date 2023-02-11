@@ -23,7 +23,7 @@ type Controller struct {
 	kubeClientSet kubernetes.Interface
 
 	traininkubeInformer cache.SharedIndexInformer
-	confgmapInformer    cache.SharedIndexInformer
+	configmapInformer   cache.SharedIndexInformer
 	jobInformer         cache.SharedIndexInformer
 	nodeInformer        cache.SharedIndexInformer
 
@@ -117,7 +117,7 @@ func New(
 	ctrl := &Controller{
 		kubeClientSet:       kubeClientSet,
 		traininkubeInformer: traininkubeInformer,
-		confgmapInformer:    configmapInformer,
+		configmapInformer:   configmapInformer,
 		jobInformer:         jobInformer,
 		nodeInformer:        nodeInformer,
 		queue:               queue,

@@ -68,7 +68,7 @@ func (c *Controller) processAddTrainInKube(ctx context.Context, trainInKube *tra
 	// Create a ConfigMap for the TrainInKube
 	configmap := createConfigMap(trainInKube, c.namespace)
 
-	exists, err := resourceExists(configmap, c.confgmapInformer.GetIndexer())
+	exists, err := resourceExists(configmap, c.configmapInformer.GetIndexer())
 	if err != nil {
 		return fmt.Errorf("error while checking if the ConfigMap already exists: %v", err)
 	}
@@ -126,9 +126,21 @@ func (c *Controller) processAddConfigMap(
 	return nil
 }
 
-// func (c *Controller) processAddBuildModel(ctx contex.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
-// 	// Needs to run
-// }
+func (c *Controller) processAddBuildModel(ctx contex.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
+	// Create another struct that will be used to scale the jobs for training, monitors
+	// the resources available in the cluster, and periodically triggers the splitting job.
+	torch := &TrainOrchestrator{
+		kubeClientSet: c.kubeClientSet,
+		jobInformer:   c.jobInformer,
+		nodeInformer:  c.nodeInformer,
+		logger:        c.logger,
+	}
+
+	// Start the TrainOrchestrator
+	go torch.Run(ctx)
+
+	return nil
+}
 
 func resourceExists(obj interface{}, indexer cache.Indexer) (bool, error) {
 	key, err := cache.MetaNamespaceKeyFunc(obj)
