@@ -33,7 +33,7 @@ func (t *TrainOrchestrator) Run(ctx context.Context, trainInKube *traininkubev1a
 }
 
 func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
-	configmap, err := c.kubeClientSet.CoreV1().ConfigMaps(t.namespace).Get(ctx, trainInKube.Name, metav1.GetOptions{})
+	configmap, err := t.kubeClientSet.CoreV1().ConfigMaps(t.namespace).Get(ctx, trainInKube.Name, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("Error while getting the ConfigMap: %v", err)
 	}
@@ -52,7 +52,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 		return nil
 	}
 
-	created_job, err := t.kubeClientSet.BatchV1().Jobs(c.namespace).Create(ctx, job, metav1.CreateOptions{})
+	created_job, err := t.kubeClientSet.BatchV1().Jobs(t.namespace).Create(ctx, job, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("Error while creating the Job: %v", err)
 	}
