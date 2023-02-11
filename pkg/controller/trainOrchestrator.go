@@ -85,7 +85,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	// gradients from each of the jobs and then performs averaging, finds the
 	// average gradient, and then updates the weights.
 	startingIndex := 0
-	endingIndex := trainInKube.Spec.BatchSize / 5
+	endingIndex := 2
 	for i := 0; i < 1; i++ {
 		// Create a slice of jobs that will be created for each epoch
 		created_jobs := make([]*batchv1.Job, 5)
