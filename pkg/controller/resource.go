@@ -127,7 +127,7 @@ func createSplitJobSpec(
 				Containers: []corev1.Container{
 					{
 						Name:  trainInKube.Name,
-						Image: "placeholder",
+						Image: "splitjob:latest",
 						// TODO : Have to remove the hardcoding of ImagePullPolicy later
 						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
 						VolumeMounts: []corev1.VolumeMount{
