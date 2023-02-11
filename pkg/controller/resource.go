@@ -19,7 +19,7 @@ func createConfigMap(trainInKube *traininkubev1alpha1.TrainInKube, namespace str
 		},
 		Data: map[string]string{
 			"epochs":                      string(trainInKube.Spec.Epochs),
-			"preprocessedDatasetLocation": trainInKube.Spec.PreprocessedDataLocation,
+			"preprocessedDatasetLocation": "whatever",
 			"splitDatasetLocation":        trainInKube.Spec.SplitDatasetLocation,
 			"modelsLocation":              trainInKube.Spec.ModelsLocation,
 		},

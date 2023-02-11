@@ -16,14 +16,14 @@ type TrainInKube struct {
 }
 
 type TrainInKubeSpec struct {
-	ModelImage               string `json:"modelimage, omitempty"`
-	ModelImagePullPolicy     string `json:"modelimagepullpolicy, omitempty`
-	TrainingImage            string `json:"trainingimage, omitempty"`
-	TrainingImagePullPolicy  string `json:"trainingimagepullpolicy, omitempty"`
+	ModelImage               string `json:"modelImage, omitempty"`
+	ModelImagePullPolicy     string `json:"modelImagepullpolicy, omitempty`
+	TrainingImage            string `json:"trainingImage, omitempty"`
+	TrainingImagePullPolicy  string `json:"trainingImagePullPolicy, omitempty"`
 	Epochs                   int    `json:"epochs, omitempty"`
-	PreprocessedDataLocation string `json:"preprocesseddatalocation, omitempty"`
-	SplitDatasetLocation     string `json:"splitdatasetlocation, omitempty"`
-	ModelsLocation           string `json:"modelslocation, omitempty"`
+	PreprocessedDataLocation string `json:"preprocessedDataLocation, omitempty"`
+	SplitDatasetLocation     string `json:"splitDatasetLocation, omitempty"`
+	ModelsLocation           string `json:"modelsLocation, omitempty"`
 }
 
 type TrainInKubeStatus struct {
