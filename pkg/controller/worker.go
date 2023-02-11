@@ -58,7 +58,7 @@ func (c *Controller) processItem(ctx context.Context, obj interface{}) error {
 		return c.processAddConfigMap(ctx, event.customResource)
 	case addBuildModel:
 		c.logger.Debugf("Processing the addBuildModel event")
-
+		return c.processAddBuildModel(ctx, event.customResource)
 	}
 
 	return nil
