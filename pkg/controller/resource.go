@@ -19,9 +19,70 @@ func createConfigMap(trainInKube *traininkubev1alpha1.TrainInKube, namespace str
 		},
 		Data: map[string]string{
 			"epochs":                      string(trainInKube.Spec.Epochs),
-			"preprocessedDatasetLocation": "whatever",
+			"preprocessedDatasetLocation": trainInKube.Spec.PreprocessedDataLocation,
 			"splitDatasetLocation":        trainInKube.Spec.SplitDatasetLocation,
 			"modelsLocation":              trainInKube.Spec.ModelsLocation,
 		},
+	}
+}
+
+func createJob(trainInKube *traininkubev1alpha1.TrainInKube, configmap *corev1.ConfigMap, namespace string) *batchv1.Job {
+	return &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			// Concatenate the trainInKube name and the string "_build_model" to create the job name
+			Name:      trainInKube.ObjectMeta.Name + "_build_model",
+			Namespace: namespace,
+			Labels:    make(map[string]string),
+			OwnerReferences: []metav1.OwnerReference{
+				*metav1.NewControllerRef(trainInKube, traininkubev1alpha1.SchemeGroupVersion.WithKind("TrainInKube")),
+			},
+		},
+		Spec: createJobSpec(trainInKube, configmap, namespace),
+	}
+}
+
+// Maybe experiment with interfaces and mutable behaviors observed in Kind here to change behavior based on option like
+// create job spec with host volume or with s3 volume or other cloud storage volumes
+func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *corev1.ConfigMap, namespace string) batchv1.JobSpec {
+	return batchv1.JobSpec{
+		Template: corev1.PodTemplateSpec{
+			ObjectMeta: metav1.ObjectMeta{
+				GenerateName: name + "-",
+				Namespace:    namespace,
+				Labels:       make(map[string]string),
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name:            name,
+						Image: 		 trainInKube.Spec.TrainingImage,
+						ImagePullPolicy: trainInKube.Spec.ModelImagePullPolicy,
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								Name: 	name + "_volume",
+								MountPath: "/data",
+							},
+						},
+						Env: []corev1.EnvVar{
+							{
+								Name: "MODEL_STORAGE_LOCATION",
+								Value: "/data",
+							}
+						},
+					},
+				},
+				Volumes: []corev1.Volume{
+					{
+						Name: name + "_volume",
+						VolumeSource: corev1.VolumeSource{
+							&corev1.HostpathVolumeSource{
+								Path: configmap.Data["modelsLocation"]
+							}
+						},
+					},
+				}
+				RestartPolicy: corev1.RestartPolicyNever,
+			}
+		}
 	}
 }

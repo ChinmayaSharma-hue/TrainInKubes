@@ -55,6 +55,9 @@ func (c *Controller) processItem(ctx context.Context, obj interface{}) error {
 		return c.processAddTrainInKube(ctx, event.newObj.(*traininkubev1alpha1.TrainInKube))
 	case addConfigMap:
 		c.logger.Debugf("Processing the addConfigMap event")
+		return c.processAddConfigMap(ctx, event.newObj.(*traininkubev1alpha1.TrainInKube))
+	case addBuildModel:
+		c.logger.Debugf("Processing the addBuildModel event")
 	}
 
 	return nil
@@ -73,15 +76,42 @@ func (c *Controller) processAddTrainInKube(ctx context.Context, trainInKube *tra
 		return nil
 	}
 
-	createConfigMap, err := c.kubeClientSet.CoreV1().ConfigMaps(c.namespace).Create(ctx, configmap, metav1.CreateOptions{})
+	createdConfigMap, err := c.kubeClientSet.CoreV1().ConfigMaps(c.namespace).Create(ctx, configmap, metav1.CreateOptions{})
 
 	// Add an event to the TrainInKube signalling the end of creation of CongigMap
 	c.queue.Add(event{
 		eventType: addConfigMap,
-		newObj:    createConfigMap,
+		newObj:    createdConfigMap,
 	})
 
 	return err
+}
+
+func (c *Controller) processAddConfigMap(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
+	// Get the ConfigMap to get the location to store the model
+	configmap, err := c.kubeClientSet.CoreV1().ConfigMaps(c.namespace).Get(ctx, trainInKube.Name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("Error while getting the ConfigMap: %v", err)
+	}
+	// Create a Job to build the model
+	job := createJob(trainInKube, configmap, c.namespace)
+
+	exists, err := resourceExists(job, c.jobInformer.GetIndexer())
+	if err != nil {
+		return fmt.Errorf("Error while checking if the Job already exists: %v", err)
+	}
+	if exists {
+		c.logger.Infof("Job already exists, skipping creation")
+		return nil
+	}
+
+	created_job, err := c.kubeClientSet.BatchV1().Jobs(c.namespace).Create(ctx, job, metav1.CreateOptions{})
+
+	// Add an event to the TrainInKube signalling the end of creation of Job
+	c.queue.Add(event{
+		eventType: addBuildModel,
+		newObj:    created_job,
+	})
 }
 
 func resourceExists(obj interface{}, indexer cache.Indexer) (bool, error) {
