@@ -180,7 +180,7 @@ func createTrainJob(
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			// Concatenate the trainInKube name and the string "_build_model" to create the job name
-			Name:      trainInKube.ObjectMeta.Name + "trainmodel",
+			Name:      trainInKube.ObjectMeta.Name + "trainmodel" + strconv.Itoa(index),
 			Namespace: namespace,
 			Labels:    make(map[string]string),
 			OwnerReferences: []metav1.OwnerReference{

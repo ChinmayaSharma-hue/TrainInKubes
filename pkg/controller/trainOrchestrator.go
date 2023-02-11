@@ -106,6 +106,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 			if err != nil {
 				return fmt.Errorf("Error while creating the Job: %v", err)
 			}
+			fmt.Println("Job Created!")
 			// Add the job to the slice of jobs
 			created_jobs[j] = created_job
 		}
