@@ -77,7 +77,7 @@ func (c *Controller) processAddTrainInKube(ctx context.Context, trainInKube *tra
 		return nil
 	}
 
-	_, err := c.kubeClientSet.CoreV1().ConfigMaps(c.namespace).Create(ctx, configmap, metav1.CreateOptions{})
+	_, err = c.kubeClientSet.CoreV1().ConfigMaps(c.namespace).Create(ctx, configmap, metav1.CreateOptions{})
 
 	// Add an event to the TrainInKube signalling the end of creation of CongigMap
 	c.queue.Add(event{
@@ -112,7 +112,7 @@ func (c *Controller) processAddConfigMap(
 		return nil
 	}
 
-	_, err := c.kubeClientSet.BatchV1().Jobs(c.namespace).Create(ctx, job, metav1.CreateOptions{})
+	_, err = c.kubeClientSet.BatchV1().Jobs(c.namespace).Create(ctx, job, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("Error while creating the Job: %v", err)
 	}
