@@ -18,9 +18,8 @@ type TrainInKube struct {
 type TrainInKubeSpec struct {
 	ModelImage               string `json:"modelImage, omitempty"`
 	ModelImagePullPolicy     string `json:"modelImagepullpolicy, omitempty`
-	TrainingImage            string `json:"trainingImage, omitempty"`
-	TrainingImagePullPolicy  string `json:"trainingImagePullPolicy, omitempty"`
 	Epochs                   int    `json:"epochs, omitempty"`
+	BatchSize                int    `json:"batchSize, omitempty"`
 	PreprocessedDataLocation string `json:"preprocessedDataLocation, omitempty"`
 	SplitDatasetLocation     string `json:"splitDatasetLocation, omitempty"`
 	ModelsLocation           string `json:"modelsLocation, omitempty"`

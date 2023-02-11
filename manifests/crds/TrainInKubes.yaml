@@ -19,11 +19,9 @@ spec:
                   type: string
                 modelImagePullPolicy:
                   type: string
-                trainingImage:
-                  type: string
-                trainingImagePullPolicy:
-                  type: string
                 epochs:
+                  type: integer
+                batchSize:
                   type: integer
                 preprocessedDatasetLocation:
                   type: string
@@ -35,8 +33,6 @@ spec:
                 - required:
                   - modelImage
                   - modelImagePullPolicy
-                  - trainingImage
-                  - trainingImagePullPolicy
                   - epochs
                   - preprocessedDatasetLocation
                   - splitDatasetLocation

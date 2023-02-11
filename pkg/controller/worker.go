@@ -131,13 +131,14 @@ func (c *Controller) processAddBuildModel(ctx context.Context, trainInKube *trai
 	// the resources available in the cluster, and periodically triggers the splitting job.
 	torch := &TrainOrchestrator{
 		kubeClientSet: c.kubeClientSet,
+		trainInKube:   trainInKube,
 		jobInformer:   c.jobInformer,
 		nodeInformer:  c.nodeInformer,
 		logger:        c.logger,
 	}
 
 	// Start the TrainOrchestrator
-	go torch.Run(ctx.Done())
+	go torch.Run(ctx)
 
 	return nil
 }

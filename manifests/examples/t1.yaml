@@ -5,9 +5,7 @@ metadata:
 spec:
   modelImage: "buildjob:latest"
   modelImagePullPolicy: "Never"
-  trainingImage: "training_image"
-  trainingImagePullPolicy: "training_image_pull_policy"
   epochs: 5
-  preprocessedDatasetLocation: "dataset_location"
-  splitDatasetLocation: "dataset_location"
+  preprocessedDatasetLocation: "/data/PreprocessedData"
+  splitDatasetLocation: "/data/Chunks"
   modelsLocation: "/data"
