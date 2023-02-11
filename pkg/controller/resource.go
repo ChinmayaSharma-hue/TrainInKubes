@@ -79,7 +79,7 @@ func createJobSpec(trainInKube *traininkubev1alpha1.TrainInKube, configmap *core
 						Name: trainInKube.Name + "volume",
 						VolumeSource: corev1.VolumeSource{
 							HostPath: &corev1.HostPathVolumeSource{
-								Path: configmap.Data["/data"],
+								Path: "/data",
 							},
 						},
 					},
@@ -157,7 +157,7 @@ func createSplitJobSpec(
 						Name: trainInKube.Name + "volume",
 						VolumeSource: corev1.VolumeSource{
 							HostPath: &corev1.HostPathVolumeSource{
-								Path: configmap.Data["/data"],
+								Path: "/data",
 							},
 						},
 					},
