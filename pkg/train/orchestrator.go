@@ -42,7 +42,7 @@ func (t *TrainOrchestrator) Run(ctx context.Context, trainInKube *traininkubev1a
 }
 
 func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
-	configmap, err := t.kubeClientSet.CoreV1().ConfigMaps(t.namespace).Get(ctx, trainInKube.Name, metav1.GetOptions{})
+	_, err := t.kubeClientSet.CoreV1().ConfigMaps(t.namespace).Get(ctx, trainInKube.Name, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("Error while getting the ConfigMap: %v", err)
 	}
@@ -126,8 +126,8 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 					"GRADIENT_LOCATION": "/data/Gradients",
 					"FEATURES_LOCATION": "/data/Chunks/x_train_" + strconv.Itoa(k) + ".npy",
 					"LABELS_LOCATION":   "/data/Chunks/y_train_" + strconv.Itoa(k) + ".npy",
-					"STARTING_INDEX":    strconv(startingIndex),
-					"ENDING_INDEX":      strconv(endingIndex),
+					"STARTING_INDEX":    strconv.Itoa(startingIndex),
+					"ENDING_INDEX":      strconv.Itoa(endingIndex),
 					"JOB_INDEX":         strconv.Itoa(k),
 				}
 				ownerReference := resources.CreateOwnerReference(trainInKube)
@@ -289,4 +289,15 @@ func waitForJobToBeDeleted(job *batchv1.Job, jobInformer cache.SharedIndexInform
 			errorCh <- nil
 		}
 	}
+}
+
+func resourceExists(obj interface{}, indexer cache.Indexer) (bool, error) {
+	key, err := cache.MetaNamespaceKeyFunc(obj)
+
+	if err != nil {
+		return false, fmt.Errorf("error while getting the key for the object: %v", err)
+	}
+
+	_, exists, err := indexer.GetByKey(key)
+	return exists, err
 }
