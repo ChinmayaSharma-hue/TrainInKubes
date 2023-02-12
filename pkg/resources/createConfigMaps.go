@@ -36,7 +36,7 @@ func CreateCMInNamespace(namespace string) CreateConfigMapOption {
 }
 
 func createCMWithOwnerReference(ownerReference metav1.OwnerReference) CreateJobOption {
-	return createJobOptionAdapter(func(j *JobOptions) error {
+	return createJobOptionAdapter(func(co *ConfigMapOptions) error {
 		append(co.OwnerReferences, ownerReference)
 		return nil
 	})
