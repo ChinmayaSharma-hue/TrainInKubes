@@ -50,51 +50,36 @@ spec:
     - tik
 ---
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: tikns
----
-apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: tiksa
-  namespace: tikns
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
-  namespace: tikns
   name: tikr
 rules:
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["create", "get", "list", "update", "delete"]
-  - apiGroups: ["batch"]
-    resources: ["jobs"]
-    verbs: ["create", "get", "list", "update", "delete"]
-  - apiGroups: [""]
-    resources: ["namespaces"]
-    verbs: ["get"]
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: tikrb
-  namespace: tikns
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
+  kind: ClusterRole
   name: tikr
 subjects:
 - kind: ServiceAccount
   name: tiksa
-  namespace: tikns
+  namespace: default
 ---
 apiVersion: v1
 kind: Pod
 metadata:
   name: tikoperator
-  namespace: tikns
 spec:
   serviceAccountName: tiksa
   containers:

@@ -6,7 +6,7 @@ COPY . .
 
 RUN rm -rf manifests
 
-ENV GO111MODULE=off
+ENV GO111MODULE=on
 
 RUN go build
 

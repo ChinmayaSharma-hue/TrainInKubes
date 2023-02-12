@@ -1,9 +1,8 @@
-module trainink8s.com/traininkubes
+module github.com/ChinmayaSharma-hue/TrainInKubes
 
 go 1.20
 
 require (
-	github.com/ChinmayaSharma-hue/TrainInKubes v0.0.0-20230212154421-ecdd9ea10068
 	github.com/gotway/gotway v0.0.12
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1

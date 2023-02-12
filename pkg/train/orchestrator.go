@@ -84,7 +84,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, TrainInKube *traini
 		return err
 	}
 
-	for i := 0; i < 1; i++ {
+	for i := 0; i < int(TrainInKube.Spec.Epochs); i++ {
 		startingIndex := 0
 		endingIndex := int(TrainInKube.Spec.BatchSize / 6)
 

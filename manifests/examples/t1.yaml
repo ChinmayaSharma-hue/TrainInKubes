@@ -1,13 +1,13 @@
 apiVersion: trainink8s.com/v1alpha1
 kind: TrainInKube
 metadata:
-  name: t1
+  name: example-traininkube
 spec:
-  modelImage: "buildjob:latest"
-  modelImagePullPolicy: "Never"
-  epochs: 5
-  batchSize: 10
-  numberOfSamples: 50000
-  preprocessedDatasetLocation: "/data/PreprocessedData"
-  splitDatasetLocation: "/data/Chunks"
-  modelsLocation: "/data"
+  modelImage: <DOCKER_IMAGE_OF_MODEL>
+  modelImagePullPolicy: "Never" or "IfNotPresent"
+  epochs: <NUMBER_OF_EPOCHS>
+  batchSize: <BATCH_SIZE>
+  numberOfSamples: <NUMBER_OF_SAMPLES>
+  preprocessedDatasetLocation: <PREPROCESSED_DATASET_LOCATION>
+  splitDatasetLocation: <SPLIT_DATASET_LOCATION>
+  modelsLocation: <MODEL_LOCATION>

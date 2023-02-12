@@ -48,7 +48,7 @@ func main() {
 	ctrl := controller.New(
 		kubeClientSet,
 		traininkubev1alpha1ClientSet,
-		"tikns",
+		"default",
 		logger.WithField("type", "controller"),
 	)
 
