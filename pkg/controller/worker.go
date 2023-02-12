@@ -77,13 +77,13 @@ func (c *Controller) processAddTrainInKube(ctx context.Context, trainInKube *tra
 		"splitDatasetLocation":        trainInKube.Spec.SplitDatasetLocation,
 		"modelsLocation":              trainInKube.Spec.ModelsLocation,
 	}
-	ownerReference := resources.createOwnerReference(trainInKube)
+	ownerReference := resources.CreateOwnerReference(trainInKube)
 
 	configmap := resources.CreateConfigMap(
 		resources.CreateCMWithName(trainInKube.Name),
 		resources.CreateCMWithData(data),
 		resources.CreateCMInNamespace(c.namespace),
-		resources.createCMWithOwnerReference(ownerReference),
+		resources.CreateCMWithOwnerReference(ownerReference),
 	)
 
 	exists, err := resourceExists(configmap, c.configmapInformer.GetIndexer())
@@ -120,21 +120,21 @@ func (c *Controller) processAddConfigMap(
 
 	// Create a Job to build the model
 	// job := createJob(trainInKube, configmap, c.namespace)
-	volume := resources.createHostPathVolume(trainInKube.name+"volume", "/data")
-	volumeMount := resources.createVolumeMount(trainInKube.name+"volume", "/data")
+	volume := resources.CreateHostPathVolume(trainInKube.name+"volume", "/data")
+	volumeMount := resources.CreateVolumeMount(trainInKube.name+"volume", "/data")
 	envVariables := map[string]string{
 		"MODEL_STORAGE_LOCATION": "/data",
 	}
 	ownerReference := resources.createOwnerReference(trainInKube)
 
 	job := resources.CreateJob(
-		resources.createJobWithName(trainInKube.Name+"buildmodel"),
-		resources.createJobWithImage("buildjob:latest"),
-		resources.createJobInNamespace(c.namespace),
-		resources.createJobWithVolume(volume),
-		resources.createJobWithVolumeMounts(volumeMount),
-		resources.createJobWithEnv(envVariables),
-		resources.createJobWithOwnerReference(ownerReference),
+		resources.CreateJobWithName(trainInKube.Name+"buildmodel"),
+		resources.CreateJobWithImage("buildjob:latest"),
+		resources.CreateJobInNamespace(c.namespace),
+		resources.CreateJobWithVolume(volume),
+		resources.CreateJobWithVolumeMounts(volumeMount),
+		resources.CreateJobWithEnv(envVariables),
+		resources.CreateJobWithOwnerReference(ownerReference),
 	)
 
 	exists, err := resourceExists(job, c.jobInformer.GetIndexer())

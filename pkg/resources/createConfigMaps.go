@@ -35,7 +35,7 @@ func CreateCMInNamespace(namespace string) CreateConfigMapOption {
 	})
 }
 
-func createCMWithOwnerReference(ownerReference metav1.OwnerReference) CreateConfigMapOption {
+func CreateCMWithOwnerReference(ownerReference metav1.OwnerReference) CreateConfigMapOption {
 	return createConfigMapOptionAdapter(func(co *ConfigMapOptions) error {
 		co.OwnerReferences = append(co.OwnerReferences, ownerReference)
 		return nil

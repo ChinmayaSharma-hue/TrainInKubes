@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
-	resources "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/resources"
+	"github.com/ChinmayaSharma-hue/TrainInKubes/pkg/resources"
 	"github.com/gotway/gotway/pkg/log"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,23 +51,24 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	// Find a way to use the same function or something to create jobs that
 	// creates different job objects based on the options passed to it
 	// job := createSplitJob(t.trainInKube, strconv.Itoa(6), configmap, t.namespace)
-	volume := resources.createHostPathVolume(trainInKube.Name+"volume", "/data")
-	volumeMount := resources.createVolumeMount(trainInKube.Name+"volume", "/data")
+
+	volume := resources.CreateHostPathVolume(trainInKube.Name+"volume", "/data")
+	volumeMount := resources.CreateVolumeMount(trainInKube.Name+"volume", "/data")
 	envVariables := map[string]string{
 		"DIVISIONS":        "strconv.Itoa(6)",
 		"DATASET_LOCATION": "/data/PreprocessedData",
 		"SPLIT_LOCATION":   "/data/Chunks",
 	}
-	ownerReference := resources.createOwnerReference(trainInKube)
+	ownerReference := resources.CreateOwnerReference(trainInKube)
 
 	job := resources.CreateJob(
-		resources.createJobWithName(trainInKube.Name+"splitdata"),
-		resources.createJobWithImage("splitjob:latest"),
-		resources.createJobInNamespace(t.namespace),
-		resources.createJobWithVolume(volume),
-		resources.createJobWithVolumeMounts(volumeMount),
-		resources.createJobWithEnv(envVariables),
-		resources.createJobWithOwnerReference(ownerReference),
+		resources.CreateJobWithName(trainInKube.Name+"splitdata"),
+		resources.CreateJobWithImage("splitjob:latest"),
+		resources.CreateJobInNamespace(t.namespace),
+		resources.CreateJobWithVolume(volume),
+		resources.CreateJobWithVolumeMounts(volumeMount),
+		resources.CreateJobWithEnv(envVariables),
+		resources.CreateJobWithOwnerReference(ownerReference),
 	)
 
 	exists, err := resourceExists(job, t.jobInformer.GetIndexer())
@@ -118,8 +119,8 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 			created_jobs := make([]*batchv1.Job, 6)
 			for k := 0; k < 6; k++ {
 				// job := createTrainJob(t.trainInKube, t.namespace, k, startingIndex, endingIndex)
-				volume := resources.createHostPathVolume(trainInKube.Name+"volume", "/data")
-				volumeMount := resources.createVolumeMount(trainInKube.Name+"volume", "/data")
+				volume := resources.CreateHostPathVolume(trainInKube.Name+"volume", "/data")
+				volumeMount := resources.CreateVolumeMount(trainInKube.Name+"volume", "/data")
 				envVariables := map[string]string{
 					"MODEL_LOCATION":    "/data/model.h5",
 					"GRADIENT_LOCATION": "/data/Gradients",
@@ -129,16 +130,16 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 					"ENDING_INDEX":      strconv(endingIndex),
 					"JOB_INDEX":         strconv.Itoa(k),
 				}
-				ownerReference := resources.createOwnerReference(trainInKube)
+				ownerReference := resources.CreateOwnerReference(trainInKube)
 
 				job := resources.CreateJob(
-					resources.createJobWithName(trainInKube.Name+"traimodel"+strconv.Itoa(k)),
-					resources.createJobWithImage("trainjob:latest"),
-					resources.createJobInNamespace(t.namespace),
-					resources.createJobWithVolume(volume),
-					resources.createJobWithVolumeMounts(volumeMount),
-					resources.createJobWithEnv(envVariables),
-					resources.createJobWithOwnerReference(ownerReference),
+					resources.CreateJobWithName(trainInKube.Name+"traimodel"+strconv.Itoa(k)),
+					resources.CreateJobWithImage("trainjob:latest"),
+					resources.CreateJobInNamespace(t.namespace),
+					resources.CreateJobWithVolume(volume),
+					resources.CreateJobWithVolumeMounts(volumeMount),
+					resources.CreateJobWithEnv(envVariables),
+					resources.CreateJobWithOwnerReference(ownerReference),
 				)
 
 				exists, err := resourceExists(job, t.jobInformer.GetIndexer())
@@ -191,23 +192,23 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 
 			// Create a job that averages over all the gradients
 			// job := createModelUpdateJob(t.trainInKube, strconv.Itoa(6), t.namespace)
-			volume := resources.createHostPathVolume(trainInKube.Name+"volume", "/data")
-			volumeMount := resources.createVolumeMount(trainInKube.Name+"volume", "/data")
+			volume := resources.CreateHostPathVolume(trainInKube.Name+"volume", "/data")
+			volumeMount := resources.CreateVolumeMount(trainInKube.Name+"volume", "/data")
 			envVariables := map[string]string{
 				"MODEL_LOCATION":    "/data/model.h5",
 				"GRADIENT_LOCATION": "/data/Gradients",
 				"NUMBER_OF_GRADS":   strconv.Itoa(6),
 			}
-			ownerReference := resources.createOwnerReference(trainInKube)
+			ownerReference := resources.CreateOwnerReference(trainInKube)
 
 			job := resources.CreateJob(
-				resources.createJobWithName(trainInKube.Name+"updatemodel"),
-				resources.createJobWithImage("modelupdatejob:latest"),
-				resources.createJobInNamespace(t.namespace),
-				resources.createJobWithVolume(volume),
-				resources.createJobWithVolumeMounts(volumeMount),
-				resources.createJobWithEnv(envVariables),
-				resources.createJobWithOwnerReference(ownerReference),
+				resources.CreateJobWithName(trainInKube.Name+"updatemodel"),
+				resources.CreateJobWithImage("modelupdatejob:latest"),
+				resources.CreateJobInNamespace(t.namespace),
+				resources.CreateJobWithVolume(volume),
+				resources.CreateJobWithVolumeMounts(volumeMount),
+				resources.CreateJobWithEnv(envVariables),
+				resources.CreateJobWithOwnerReference(ownerReference),
 			)
 
 			exists, err := resourceExists(job, t.jobInformer.GetIndexer())
