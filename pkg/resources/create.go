@@ -11,7 +11,7 @@ func CreateJob(options ...CreateJobOption) *batchv1.Job {
 		Name:            "defaultjobname",
 		ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
 		Labels:          make(map[string]string),
-		OwnerReferences: make([]metav1.OwnerReference, 5),
+		OwnerReferences: make([]metav1.OwnerReference, 0),
 		Namespace:       "default",
 		Volumes:         make([]corev1.Volume, 5),
 		Env:             make([]corev1.EnvVar, 10),
@@ -67,7 +67,7 @@ func CreateConfigMap(options ...CreateConfigMapOption) *corev1.ConfigMap {
 		Name:            "defaultcmname",
 		Data:            make(map[string]string),
 		Namespace:       "default",
-		OwnerReferences: make([]metav1.OwnerReference, 5),
+		OwnerReferences: make([]metav1.OwnerReference, 0),
 	}
 
 	for _, o := range options {
