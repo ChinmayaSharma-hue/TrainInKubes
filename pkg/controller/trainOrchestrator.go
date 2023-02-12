@@ -188,8 +188,8 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	return nil
 }
 
-func waitForJobToFinish(job *batchv1.Job, jobInformer cache.SharedIndexInformer, errorCh chan error) {
-	key, err := cache.MetaNamespaceKeyFunc(job)
+func waitForJobToFinish(obj interface{}, jobInformer cache.SharedIndexInformer, errorCh chan error) {
+	key, err := cache.MetaNamespaceKeyFunc(obj)
 
 	if err != nil {
 		errorCh <- err
@@ -214,8 +214,8 @@ func waitForJobToFinish(job *batchv1.Job, jobInformer cache.SharedIndexInformer,
 	}
 }
 
-func waitForJobToBeDeleted(job *batchv1.Job, jobInformer cache.SharedIndexInformer, errorCh chan error) {
-	key, err := cache.MetaNamespaceKeyFunc(job)
+func waitForJobToBeDeleted(obj interface{}, jobInformer cache.SharedIndexInformer, errorCh chan error) {
+	key, err := cache.MetaNamespaceKeyFunc(obj)
 
 	if err != nil {
 		errorCh <- err
