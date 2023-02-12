@@ -58,6 +58,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: tiksa
+  namespace: tikns
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -81,7 +82,7 @@ metadata:
   name: tikrb
   namespace: tikns
 roleRef:
-  apiGroup: rbac.authorization.k8s.io/v1
+  apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: tikr
 subjects:
@@ -89,4 +90,14 @@ subjects:
   name: tiksa
   namespace: tikns
 ---
-
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tikoperator
+  namespace: tikns
+spec:
+  serviceAccountName: tiksa
+  containers:
+  - image: tikoperator:latest
+    imagePullPolicy: IfNotPresent
+    name: tikoperator

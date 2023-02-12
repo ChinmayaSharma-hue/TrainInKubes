@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
 
 	traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
 	"github.com/ChinmayaSharma-hue/TrainInKubes/pkg/resources"
@@ -15,10 +14,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"strconv"
-)
-
-var (
-	wg sync.WaitGroup
 )
 
 type TrainOrchestrator struct {

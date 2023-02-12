@@ -6,6 +6,8 @@ COPY . .
 
 RUN rm -rf manifests
 
+ENV GO111MODULE=off
+
 RUN go build
 
 CMD [ "./TrainInKubes" ]
