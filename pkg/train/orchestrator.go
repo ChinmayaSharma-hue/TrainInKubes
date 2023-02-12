@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
-	"github.com/ChinmayaSharma-hue/TrainInKubes/pkg/resources"
+	resources "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/resources"
 	"github.com/gotway/gotway/pkg/log"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
