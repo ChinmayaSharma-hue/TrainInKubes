@@ -196,11 +196,7 @@ func waitForJobToFinish(job *batchv1.Job, jobInformer cache.SharedIndexInformer,
 	fmt.Println("Job namespace: ", job.Namespace)
 	fmt.Println("Job labels: ", job.Labels)
 
-	key, err := cache.MetaNamespaceKeyFunc(job)
-
-	if err != nil {
-		errorCh <- err
-	}
+	key := job.Namespace + "/" + job.Name
 
 	for {
 		jobObject, exists, err := jobInformer.GetIndexer().GetByKey(key)
