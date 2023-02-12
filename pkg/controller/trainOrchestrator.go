@@ -90,11 +90,13 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 		// endingIndex is batch size divided by total number of jobs, and is also an integer,
 		// so get the division result and get the integer rounded down
 		endingIndex := int(trainInKube.Spec.BatchSize / 6)
+		fmt.Printf("Starting and ending indices, %d, and %d.", startingIndex, endingIndex)
 
 		if trainInKube.Spec.BatchSize == 0 {
 			return errors.New("Batch size cannot be 0")
 		}
 		numberOfMiniBatches := int(trainInKube.Spec.NumberOfSamples / trainInKube.Spec.BatchSize)
+		fmt.Printf("Number of mini batches, %d.", numberOfMiniBatches)
 
 		for j := 0; j < numberOfMiniBatches; j++ {
 			// Create a slice of jobs that will be created for each minibatch
