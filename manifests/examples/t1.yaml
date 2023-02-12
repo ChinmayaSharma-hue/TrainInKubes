@@ -6,6 +6,8 @@ spec:
   modelImage: "buildjob:latest"
   modelImagePullPolicy: "Never"
   epochs: 5
+  batchSize: 10
+  numberOfSamples: 50000
   preprocessedDatasetLocation: "/data/PreprocessedData"
   splitDatasetLocation: "/data/Chunks"
   modelsLocation: "/data"
