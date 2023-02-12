@@ -54,7 +54,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, TrainInKube *traini
 	volume := resources.CreateHostPathVolume(TrainInKube.Name+"volume", "/data")
 	volumeMount := resources.CreateVolumeMount(TrainInKube.Name+"volume", "/data")
 	envVariables := map[string]string{
-		"DIVISIONS":        "strconv.Itoa(6)",
+		"DIVISIONS":        strconv.Itoa(6),
 		"DATASET_LOCATION": "/data/PreprocessedData",
 		"SPLIT_LOCATION":   "/data/Chunks",
 	}
