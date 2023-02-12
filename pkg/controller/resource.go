@@ -269,7 +269,7 @@ func createTrainJobSpec(
 func createModelUpdateJob(
 	trainInKube *traininkubev1alpha1.TrainInKube, 
 	NumberOfJobs string, 
-	namespace string
+	namespace string.
 	) *batchv1.Job {
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -288,7 +288,7 @@ func createModelUpdateJob(
 func createModelUpdateJobSpec(
 	trainInKube *traininkubev1alpha1.TrainInKube, 
 	NumberOfJobs string, 
-	namespace string
+	namespace string,
 	) batchv1.JobSpec {
 	return batchv1.JobSpec{
 		Template: corev1.PodTemplateSpec{
