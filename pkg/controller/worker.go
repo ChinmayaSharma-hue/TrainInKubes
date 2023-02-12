@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
+	"github.com/ChinmayaSharma-hue/TrainInKubes/pkg/train"
+	"github.com/ChinmayaSharma-hue/TrainInKubes/pkg/resources"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -65,8 +67,21 @@ func (c *Controller) processItem(ctx context.Context, obj interface{}) error {
 }
 
 func (c *Controller) processAddTrainInKube(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
-	// Create a ConfigMap for the TrainInKube
-	configmap := createConfigMap(trainInKube, c.namespace)
+	// configmap := createConfigMap(trainInKube, c.namespace)
+	data = map[string]string{
+		"epochs":                      string(trainInKube.Spec.Epochs),
+		"batchSize":                   string(trainInKube.Spec.BatchSize),
+		"numberOfSamples":             strconv.Itoa(trainInKube.Spec.NumberOfSamples),
+		"preprocessedDatasetLocation": trainInKube.Spec.PreprocessedDataLocation,
+		"splitDatasetLocation":        trainInKube.Spec.SplitDatasetLocation,
+		"modelsLocation":              trainInKube.Spec.ModelsLocation,
+	}
+
+	configmap := resources.CreateConfigMap(
+		resources.CreateCMWithName(trainInKube.Name),
+		resources.CreateCMWithData(data),
+		resources.CreateCMInNamespace(c.namespace)
+	)
 
 	exists, err := resourceExists(configmap, c.configmapInformer.GetIndexer())
 	if err != nil {
@@ -101,7 +116,21 @@ func (c *Controller) processAddConfigMap(
 	}
 
 	// Create a Job to build the model
-	job := createJob(trainInKube, configmap, c.namespace)
+	// job := createJob(trainInKube, configmap, c.namespace)
+	volume := resources.createHostPathVolume(trainInKube.name + "volume", "/data")
+	volumeMount := resources.createVolumeMount(trainInKube.name + "volume", "/data")
+	envVariables := map[string]string{
+		"MODEL_STORAGE_LOCATION": "/data",
+	}
+
+	job := resources.CreateJob(
+		resources.createJobWithName(trainInKube.Name + "buildmodel"),
+		resources.createJobWithImage("buildjob:latest"),
+		resources.createJobInNamespace(c.namespace),
+		resources.createJobWithVolume(volume),
+		resources.createJobWithVolumeMounts(volumeMount),
+		resources.createJobWithEnv(envVariables),
+	)
 
 	exists, err := resourceExists(job, c.jobInformer.GetIndexer())
 	if err != nil {
@@ -129,7 +158,7 @@ func (c *Controller) processAddConfigMap(
 func (c *Controller) processAddBuildModel(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
 	// Create another struct that will be used to scale the jobs for training, monitors
 	// the resources available in the cluster, and periodically triggers the splitting job.
-	torch := &TrainOrchestrator{
+	torch := &train.TrainOrchestrator{
 		kubeClientSet: c.kubeClientSet,
 		trainInKube:   trainInKube,
 		jobInformer:   c.jobInformer,

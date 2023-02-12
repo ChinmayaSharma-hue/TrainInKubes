@@ -1,4 +1,4 @@
-package controller
+package train
 
 import (
 	"context"
@@ -49,7 +49,23 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	// Create a job that divides the data between the jobs
 	// Find a way to use the same function or something to create jobs that
 	// creates different job objects based on the options passed to it
-	job := createSplitJob(t.trainInKube, strconv.Itoa(6), configmap, t.namespace)
+	// job := createSplitJob(t.trainInKube, strconv.Itoa(6), configmap, t.namespace)
+	volume := resources.createHostPathVolume(trainInKube.name + "volume", "/data")
+	volumeMount := resources.createVolumeMount(trainInKube.name + "volume", "/data")
+	envVariables := map[string]string{
+		"DIVISIONS": "strconv.Itoa(6)",
+		"DATASET_LOCATION": "/data/PreprocessedData",
+		"SPLIT_LOCATION": "/data/Chunks"
+	}
+
+	job := resources.CreateJob(
+		resources.createJobWithName(trainInKube.Name + "splitdata"),
+		resources.createJobWithImage("splitjob:latest"),
+		resources.createJobInNamespace(c.namespace),
+		resources.createJobWithVolume(volume),
+		resources.createJobWithVolumeMounts(volumeMount),
+		resources.createJobWithEnv(envVariables),
+	)
 
 	exists, err := resourceExists(job, t.jobInformer.GetIndexer())
 	if err != nil {
@@ -87,22 +103,40 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	// average gradient, and then updates the weights.
 	for i := 0; i < 1; i++ {
 		startingIndex := 0
-		// endingIndex is batch size divided by total number of jobs, and is also an integer,
-		// so get the division result and get the integer rounded down
 		endingIndex := int(trainInKube.Spec.BatchSize / 6)
-		fmt.Printf("Starting and ending indices, %d, and %d.", startingIndex, endingIndex)
 
 		if trainInKube.Spec.BatchSize == 0 {
 			return errors.New("Batch size cannot be 0")
 		}
+
 		numberOfMiniBatches := int(trainInKube.Spec.NumberOfSamples / trainInKube.Spec.BatchSize)
-		fmt.Printf("Number of mini batches, %d.", numberOfMiniBatches)
 
 		for j := 0; j < numberOfMiniBatches; j++ {
-			// Create a slice of jobs that will be created for each minibatch
 			created_jobs := make([]*batchv1.Job, 6)
 			for k := 0; k < 6; k++ {
-				job := createTrainJob(t.trainInKube, t.namespace, k, startingIndex, endingIndex)
+				// job := createTrainJob(t.trainInKube, t.namespace, k, startingIndex, endingIndex)
+				volume := resources.createHostPathVolume(trainInKube.name + "volume", "/data")
+				volumeMount := resources.createVolumeMount(trainInKube.name + "volume", "/data")
+				envVariables := map[string]string{
+					"MODEL_LOCATION": "/data/model.h5",
+					"GRADIENT_LOCATION": "/data/Gradients",
+					"FEATURES_LOCATION": "/data/Chunks/x_train_" + strconv.Itoa(k) + ".npy",
+					"LABELS_LOCATION": "/data/Chunks/y_train_" + strconv.Itoa(k) + ".npy",
+					"STARTING_INDEX": strconv(startingIndex),
+					"ENDING_INDEX": strconv(endingIndex),
+					"JOB_INDEX": strconv.Itoa(k),
+				}
+			
+				job := resources.CreateJob(
+					resources.createJobWithName(trainInKube.Name + "traimodel" + strconv.Itoa(k)),
+					resources.createJobWithImage("trainjob:latest"),
+					resources.createJobInNamespace(c.namespace),
+					resources.createJobWithVolume(volume),
+					resources.createJobWithVolumeMounts(volumeMount),
+					resources.createJobWithEnv(envVariables),
+				)
+			
+
 
 				exists, err := resourceExists(job, t.jobInformer.GetIndexer())
 				if err != nil {
@@ -153,7 +187,25 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 			}
 
 			// Create a job that averages over all the gradients
-			job := createModelUpdateJob(t.trainInKube, strconv.Itoa(6), t.namespace)
+			// job := createModelUpdateJob(t.trainInKube, strconv.Itoa(6), t.namespace)
+			volume := resources.createHostPathVolume(trainInKube.name + "volume", "/data")
+			volumeMount := resources.createVolumeMount(trainInKube.name + "volume", "/data")
+			envVariables := map[string]string{
+				"MODEL_LOCATION": "/data/model.h5",
+				"GRADIENT_LOCATION": "/data/Gradients",
+				"NUMBER_OF_GRADS": strconv.Itoa(6),
+			}
+		
+			job := resources.CreateJob(
+				resources.createJobWithName(trainInKube.Name + "updatemodel"),
+				resources.createJobWithImage("modelupdatejob:latest"),
+				resources.createJobInNamespace(c.namespace),
+				resources.createJobWithVolume(volume),
+				resources.createJobWithVolumeMounts(volumeMount),
+				resources.createJobWithEnv(envVariables),
+			)
+		
+
 			exists, err := resourceExists(job, t.jobInformer.GetIndexer())
 			if err != nil {
 				return fmt.Errorf("Error while checking if the Job already exists: %v", err)
