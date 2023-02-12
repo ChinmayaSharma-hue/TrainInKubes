@@ -278,10 +278,10 @@ func createModelUpdateJob(
 			Namespace: namespace,
 			Labels:    make(map[string]string),
 			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(trainInKube, NumberOfJobs, traininkubev1alpha1.SchemeGroupVersion.WithKind("TrainInKube")),
+				*metav1.NewControllerRef(trainInKube, traininkubev1alpha1.SchemeGroupVersion.WithKind("TrainInKube")),
 			},
 		},
-		Spec: createModelUpdateJobSpec(trainInKube, namespace),
+		Spec: createModelUpdateJobSpec(trainInKube, NumberOfJobs, namespace),
 	}
 }
 
