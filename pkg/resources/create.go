@@ -13,8 +13,8 @@ func CreateJob(options ...CreateJobOption) *batchv1.Job {
 		Labels:          make(map[string]string),
 		OwnerReferences: make([]metav1.OwnerReference, 0),
 		Namespace:       "default",
-		Volumes:         make([]corev1.Volume, 5),
-		Env:             make([]corev1.EnvVar, 10),
+		Volumes:         make([]corev1.Volume, 0),
+		Env:             make([]corev1.EnvVar, 0),
 	}
 
 	for _, o := range options {
