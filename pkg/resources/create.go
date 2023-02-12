@@ -1,17 +1,19 @@
 package resources
 
 import (
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateJob(options ...CreateOption) err {
+func CreateJob(options ...CreateJobOption) error {
 	jopts := &JobOptions{
 		Name:            "defaultjobname",
 		ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
 		Labels:          make(map[string]string),
 		Namespace:       "default",
-		Volumes:         make([]corev1.Volume),
-		Env:             make([]corev1.EnvVar),
+		Volumes:         make([]corev1.Volume, 5),
+		Env:             make([]corev1.EnvVar, 10),
 	}
 
 	for _, o := range options {
@@ -63,7 +65,7 @@ func CreateJobSpecWithOptions(jopts *JobOptions) batchv1.JobSpec {
 	}
 }
 
-func CreateConfigMap(options ...CreateOption) err {
+func CreateConfigMap(options ...CreateConfigMapOption) error {
 	cmopts := &ConfigMapOptions{
 		Name:      "defaultcmname",
 		Data:      make(map[string]string),
