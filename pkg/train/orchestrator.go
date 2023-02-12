@@ -47,9 +47,6 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, TrainInKube *traini
 	}
 
 	// Create a job that divides the data between the jobs
-	// Find a way to use the same function or something to create jobs that
-	// creates different job objects based on the options passed to it
-	// job := createSplitJob(t.TrainInKube, strconv.Itoa(6), configmap, t.Namespace)
 
 	volume := resources.CreateHostPathVolume(TrainInKube.Name+"volume", "/data")
 	volumeMount := resources.CreateVolumeMount(TrainInKube.Name+"volume", "/data")
@@ -92,18 +89,6 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, TrainInKube *traini
 		return err
 	}
 
-	// Use the job informer to keep track of the job
-
-	// After the job finishes execution, keep track of each split location
-	// and then create a job out of a container that takes in the data
-	// from each split location, takes a parameter that tells it which samples
-	// to take from the data, performs feedforward and backpropagation on the
-	// data it takes, and then stores the gradient in a specified location.
-
-	// Create a loop that runs for the number of epochs, creating 6 jobs for
-	// each epoch, and then after each epoch, create a job that takes in the
-	// gradients from each of the jobs and then performs averaging, finds the
-	// average gradient, and then updates the weights.
 	for i := 0; i < 1; i++ {
 		startingIndex := 0
 		endingIndex := int(TrainInKube.Spec.BatchSize / 6)
@@ -117,8 +102,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, TrainInKube *traini
 		for j := 0; j < numberOfMiniBatches; j++ {
 			created_jobs := make([]*batchv1.Job, 6)
 			for k := 0; k < 6; k++ {
-				// job := createTrainJob(t.TrainInKube, t.Namespace, k, startingIndex, endingIndex)
-				volume := resources.CreateHostPathVolume(TrainInKube.Name+"volume", "/data")
+=				volume := resources.CreateHostPathVolume(TrainInKube.Name+"volume", "/data")
 				volumeMount := resources.CreateVolumeMount(TrainInKube.Name+"volume", "/data")
 				envVariables := map[string]string{
 					"MODEL_LOCATION":    "/data/model.h5",
@@ -190,7 +174,6 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, TrainInKube *traini
 			}
 
 			// Create a job that averages over all the gradients
-			// job := createModelUpdateJob(t.TrainInKube, strconv.Itoa(6), t.Namespace)
 			volume := resources.CreateHostPathVolume(TrainInKube.Name+"volume", "/data")
 			volumeMount := resources.CreateVolumeMount(TrainInKube.Name+"volume", "/data")
 			envVariables := map[string]string{
