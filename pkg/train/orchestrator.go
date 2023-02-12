@@ -23,25 +23,25 @@ var (
 
 type TrainOrchestrator struct {
 	KubeClientSet kubernetes.Interface
-	trainInKube   *traininkubev1alpha1.TrainInKube
-	jobInformer   cache.SharedIndexInformer
+	TrainInKube   *traininkubev1alpha1.TrainInKube
+	JobInformer   cache.SharedIndexInformer
 
-	namespace string
+	Namespace string
 
-	logger log.Logger
+	Logger log.Logger
 }
 
-func (t *TrainOrchestrator) Run(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) {
-	t.logger.Infof("Starting the job orchestrator...")
+func (t *TrainOrchestrator) Run(ctx context.Context, TrainInKube *traininkubev1alpha1.TrainInKube) {
+	t.Logger.Infof("Starting the job orchestrator...")
 
-	err := t.Orchestrate(ctx, trainInKube)
+	err := t.Orchestrate(ctx, TrainInKube)
 	if err != nil {
-		t.logger.Errorf("Error while orchestrating the jobs: %v", err)
+		t.Logger.Errorf("Error while orchestrating the jobs: %v", err)
 	}
 }
 
-func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
-	_, err := t.KubeClientSet.CoreV1().ConfigMaps(t.namespace).Get(ctx, trainInKube.Name, metav1.GetOptions{})
+func (t *TrainOrchestrator) Orchestrate(ctx context.Context, TrainInKube *traininkubev1alpha1.TrainInKube) error {
+	_, err := t.KubeClientSet.CoreV1().ConfigMaps(t.Namespace).Get(ctx, TrainInKube.Name, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("Error while getting the ConfigMap: %v", err)
 	}
@@ -49,44 +49,44 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	// Create a job that divides the data between the jobs
 	// Find a way to use the same function or something to create jobs that
 	// creates different job objects based on the options passed to it
-	// job := createSplitJob(t.trainInKube, strconv.Itoa(6), configmap, t.namespace)
+	// job := createSplitJob(t.TrainInKube, strconv.Itoa(6), configmap, t.Namespace)
 
-	volume := resources.CreateHostPathVolume(trainInKube.Name+"volume", "/data")
-	volumeMount := resources.CreateVolumeMount(trainInKube.Name+"volume", "/data")
+	volume := resources.CreateHostPathVolume(TrainInKube.Name+"volume", "/data")
+	volumeMount := resources.CreateVolumeMount(TrainInKube.Name+"volume", "/data")
 	envVariables := map[string]string{
 		"DIVISIONS":        "strconv.Itoa(6)",
 		"DATASET_LOCATION": "/data/PreprocessedData",
 		"SPLIT_LOCATION":   "/data/Chunks",
 	}
-	ownerReference := resources.CreateOwnerReference(trainInKube)
+	ownerReference := resources.CreateOwnerReference(TrainInKube)
 
 	job := resources.CreateJob(
-		resources.CreateJobWithName(trainInKube.Name+"splitdata"),
+		resources.CreateJobWithName(TrainInKube.Name+"splitdata"),
 		resources.CreateJobWithImage("splitjob:latest"),
-		resources.CreateJobInNamespace(t.namespace),
+		resources.CreateJobInNamespace(t.Namespace),
 		resources.CreateJobWithVolume(volume),
 		resources.CreateJobWithVolumeMounts(volumeMount),
 		resources.CreateJobWithEnv(envVariables),
 		resources.CreateJobWithOwnerReference(ownerReference),
 	)
 
-	exists, err := resourceExists(job, t.jobInformer.GetIndexer())
+	exists, err := resourceExists(job, t.JobInformer.GetIndexer())
 	if err != nil {
 		return fmt.Errorf("Error while checking if the Job already exists: %v", err)
 	}
 	if exists {
-		t.logger.Infof("Job already exists, skipping creation")
+		t.Logger.Infof("Job already exists, skipping creation")
 		return nil
 	}
 
-	created_job, err := t.KubeClientSet.BatchV1().Jobs(t.namespace).Create(ctx, job, metav1.CreateOptions{})
+	created_job, err := t.KubeClientSet.BatchV1().Jobs(t.Namespace).Create(ctx, job, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("Error while creating the Job: %v", err)
 	}
 
 	// Block the function till the job finishes execution
 	errorCh := make(chan error)
-	go waitForJobToFinish(created_job, t.jobInformer, errorCh)
+	go waitForJobToFinish(created_job, t.JobInformer, errorCh)
 	err = <-errorCh
 	if err != nil {
 		return err
@@ -106,20 +106,20 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	// average gradient, and then updates the weights.
 	for i := 0; i < 1; i++ {
 		startingIndex := 0
-		endingIndex := int(trainInKube.Spec.BatchSize / 6)
+		endingIndex := int(TrainInKube.Spec.BatchSize / 6)
 
-		if trainInKube.Spec.BatchSize == 0 {
+		if TrainInKube.Spec.BatchSize == 0 {
 			return errors.New("Batch size cannot be 0")
 		}
 
-		numberOfMiniBatches := int(trainInKube.Spec.NumberOfSamples / trainInKube.Spec.BatchSize)
+		numberOfMiniBatches := int(TrainInKube.Spec.NumberOfSamples / TrainInKube.Spec.BatchSize)
 
 		for j := 0; j < numberOfMiniBatches; j++ {
 			created_jobs := make([]*batchv1.Job, 6)
 			for k := 0; k < 6; k++ {
-				// job := createTrainJob(t.trainInKube, t.namespace, k, startingIndex, endingIndex)
-				volume := resources.CreateHostPathVolume(trainInKube.Name+"volume", "/data")
-				volumeMount := resources.CreateVolumeMount(trainInKube.Name+"volume", "/data")
+				// job := createTrainJob(t.TrainInKube, t.Namespace, k, startingIndex, endingIndex)
+				volume := resources.CreateHostPathVolume(TrainInKube.Name+"volume", "/data")
+				volumeMount := resources.CreateVolumeMount(TrainInKube.Name+"volume", "/data")
 				envVariables := map[string]string{
 					"MODEL_LOCATION":    "/data/model.h5",
 					"GRADIENT_LOCATION": "/data/Gradients",
@@ -129,28 +129,28 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 					"ENDING_INDEX":      strconv.Itoa(endingIndex),
 					"JOB_INDEX":         strconv.Itoa(k),
 				}
-				ownerReference := resources.CreateOwnerReference(trainInKube)
+				ownerReference := resources.CreateOwnerReference(TrainInKube)
 
 				job := resources.CreateJob(
-					resources.CreateJobWithName(trainInKube.Name+"traimodel"+strconv.Itoa(k)),
+					resources.CreateJobWithName(TrainInKube.Name+"traimodel"+strconv.Itoa(k)),
 					resources.CreateJobWithImage("trainjob:latest"),
-					resources.CreateJobInNamespace(t.namespace),
+					resources.CreateJobInNamespace(t.Namespace),
 					resources.CreateJobWithVolume(volume),
 					resources.CreateJobWithVolumeMounts(volumeMount),
 					resources.CreateJobWithEnv(envVariables),
 					resources.CreateJobWithOwnerReference(ownerReference),
 				)
 
-				exists, err := resourceExists(job, t.jobInformer.GetIndexer())
+				exists, err := resourceExists(job, t.JobInformer.GetIndexer())
 				if err != nil {
 					return fmt.Errorf("Error while checking if the Job already exists: %v", err)
 				}
 				if exists {
-					t.logger.Infof("Job already exists, skipping creation")
+					t.Logger.Infof("Job already exists, skipping creation")
 					return nil
 				}
 
-				created_job, err := t.KubeClientSet.BatchV1().Jobs(t.namespace).Create(ctx, job, metav1.CreateOptions{})
+				created_job, err := t.KubeClientSet.BatchV1().Jobs(t.Namespace).Create(ctx, job, metav1.CreateOptions{})
 				if err != nil {
 					return fmt.Errorf("Error while creating the Job: %v", err)
 				}
@@ -160,7 +160,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 			// Wait until the execution of all the jobs finishes using go routines
 			doneCh := make(chan error, 6)
 			for _, job := range created_jobs {
-				go waitForJobToFinish(job, t.jobInformer, doneCh)
+				go waitForJobToFinish(job, t.JobInformer, doneCh)
 			}
 			for l := 0; l < 6; l++ {
 				err := <-doneCh
@@ -169,18 +169,18 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 				}
 			}
 
-			t.logger.Infof("Finished executing all the jobs for epoch %d", i)
+			t.Logger.Infof("Finished executing all the jobs for epoch %d", i)
 
 			// Delete all the jobs that were created for the minibatch
 			for _, job := range created_jobs {
-				err := t.KubeClientSet.BatchV1().Jobs(t.namespace).Delete(ctx, job.Name, metav1.DeleteOptions{})
+				err := t.KubeClientSet.BatchV1().Jobs(t.Namespace).Delete(ctx, job.Name, metav1.DeleteOptions{})
 				if err != nil {
 					return fmt.Errorf("Error while deleting the Job: %v", err)
 				}
 			}
 			deleteCh := make(chan error, 6)
 			for _, job := range created_jobs {
-				go waitForJobToBeDeleted(job, t.jobInformer, deleteCh)
+				go waitForJobToBeDeleted(job, t.JobInformer, deleteCh)
 			}
 			for l := 0; l < 6; l++ {
 				err := <-deleteCh
@@ -190,50 +190,50 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 			}
 
 			// Create a job that averages over all the gradients
-			// job := createModelUpdateJob(t.trainInKube, strconv.Itoa(6), t.namespace)
-			volume := resources.CreateHostPathVolume(trainInKube.Name+"volume", "/data")
-			volumeMount := resources.CreateVolumeMount(trainInKube.Name+"volume", "/data")
+			// job := createModelUpdateJob(t.TrainInKube, strconv.Itoa(6), t.Namespace)
+			volume := resources.CreateHostPathVolume(TrainInKube.Name+"volume", "/data")
+			volumeMount := resources.CreateVolumeMount(TrainInKube.Name+"volume", "/data")
 			envVariables := map[string]string{
 				"MODEL_LOCATION":    "/data/model.h5",
 				"GRADIENT_LOCATION": "/data/Gradients",
 				"NUMBER_OF_GRADS":   strconv.Itoa(6),
 			}
-			ownerReference := resources.CreateOwnerReference(trainInKube)
+			ownerReference := resources.CreateOwnerReference(TrainInKube)
 
 			job := resources.CreateJob(
-				resources.CreateJobWithName(trainInKube.Name+"updatemodel"),
+				resources.CreateJobWithName(TrainInKube.Name+"updatemodel"),
 				resources.CreateJobWithImage("modelupdatejob:latest"),
-				resources.CreateJobInNamespace(t.namespace),
+				resources.CreateJobInNamespace(t.Namespace),
 				resources.CreateJobWithVolume(volume),
 				resources.CreateJobWithVolumeMounts(volumeMount),
 				resources.CreateJobWithEnv(envVariables),
 				resources.CreateJobWithOwnerReference(ownerReference),
 			)
 
-			exists, err := resourceExists(job, t.jobInformer.GetIndexer())
+			exists, err := resourceExists(job, t.JobInformer.GetIndexer())
 			if err != nil {
 				return fmt.Errorf("Error while checking if the Job already exists: %v", err)
 			}
 			if exists {
-				t.logger.Infof("Job already exists, skipping creation")
+				t.Logger.Infof("Job already exists, skipping creation")
 				return nil
 			}
-			created_job, err := t.KubeClientSet.BatchV1().Jobs(t.namespace).Create(ctx, job, metav1.CreateOptions{})
+			created_job, err := t.KubeClientSet.BatchV1().Jobs(t.Namespace).Create(ctx, job, metav1.CreateOptions{})
 			if err != nil {
 				return fmt.Errorf("Error while creating the Job: %v", err)
 			}
-			go waitForJobToFinish(created_job, t.jobInformer, errorCh)
+			go waitForJobToFinish(created_job, t.JobInformer, errorCh)
 			err = <-errorCh
 			if err != nil {
 				return err
 			}
 
-			err = t.KubeClientSet.BatchV1().Jobs(t.namespace).Delete(ctx, created_job.Name, metav1.DeleteOptions{})
+			err = t.KubeClientSet.BatchV1().Jobs(t.Namespace).Delete(ctx, created_job.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return fmt.Errorf("Error while deleting the Job: %v", err)
 			}
 			deletenbCh := make(chan error)
-			go waitForJobToBeDeleted(created_job, t.jobInformer, deletenbCh)
+			go waitForJobToBeDeleted(created_job, t.JobInformer, deletenbCh)
 			err = <-deletenbCh
 			if err != nil {
 				return err
@@ -247,14 +247,14 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	return nil
 }
 
-func waitForJobToFinish(job *batchv1.Job, jobInformer cache.SharedIndexInformer, errorCh chan error) {
+func waitForJobToFinish(job *batchv1.Job, JobInformer cache.SharedIndexInformer, errorCh chan error) {
 	key, err := cache.MetaNamespaceKeyFunc(job)
 	if err != nil {
 		errorCh <- err
 	}
 
 	for {
-		jobObject, exists, err := jobInformer.GetIndexer().GetByKey(key)
+		jobObject, exists, err := JobInformer.GetIndexer().GetByKey(key)
 		if err != nil {
 			errorCh <- err
 		}
@@ -272,7 +272,7 @@ func waitForJobToFinish(job *batchv1.Job, jobInformer cache.SharedIndexInformer,
 	}
 }
 
-func waitForJobToBeDeleted(job *batchv1.Job, jobInformer cache.SharedIndexInformer, errorCh chan error) {
+func waitForJobToBeDeleted(job *batchv1.Job, JobInformer cache.SharedIndexInformer, errorCh chan error) {
 	key, err := cache.MetaNamespaceKeyFunc(job)
 
 	if err != nil {
@@ -280,7 +280,7 @@ func waitForJobToBeDeleted(job *batchv1.Job, jobInformer cache.SharedIndexInform
 	}
 
 	for {
-		_, exists, err := jobInformer.GetIndexer().GetByKey(key)
+		_, exists, err := JobInformer.GetIndexer().GetByKey(key)
 		if err != nil {
 			errorCh <- err
 		}
