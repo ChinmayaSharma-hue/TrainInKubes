@@ -281,7 +281,6 @@ func waitForJobToBeDeleted(job *batchv1.Job, JobInformer cache.SharedIndexInform
 
 	if err != nil {
 		errorCh <- err
-		break
 	}
 
 	for {
