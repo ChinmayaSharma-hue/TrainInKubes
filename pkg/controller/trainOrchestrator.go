@@ -190,13 +190,10 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 }
 
 func waitForJobToFinish(job *batchv1.Job, jobInformer cache.SharedIndexInformer, errorCh chan error) {
-	// Find out if job is an invalid or null pointer
-	// List all the fields of the job
-	fmt.Println("Job name: ", job.Name)
-	fmt.Println("Job namespace: ", job.Namespace)
-	fmt.Println("Job labels: ", job.Labels)
-
-	key := job.Namespace + "/" + job.Name
+	key, err := cache.MetaNamespaceKeyFunc(job)
+	if err != nil {
+		errorCh <- err
+	}
 
 	for {
 		jobObject, exists, err := jobInformer.GetIndexer().GetByKey(key)
