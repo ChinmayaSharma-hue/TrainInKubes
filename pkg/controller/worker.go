@@ -165,10 +165,10 @@ func (c *Controller) processAddBuildModel(ctx context.Context, trainInKube *trai
 	// the resources available in the cluster, and periodically triggers the splitting job.
 	torch := &train.TrainOrchestrator{
 		KubeClientSet: c.kubeClientSet,
-		trainInKube:   trainInKube,
-		jobInformer:   c.jobInformer,
-		namespace:     c.namespace,
-		logger:        c.logger,
+		TrainInKube:   trainInKube,
+		JobInformer:   c.jobInformer,
+		Namespace:     c.namespace,
+		Logger:        c.logger,
 	}
 
 	// Start the TrainOrchestrator
