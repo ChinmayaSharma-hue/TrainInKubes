@@ -48,3 +48,45 @@ spec:
     kind: TrainInKube
     shortNames:
     - tik
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tikns
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tiksa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: tikns
+  name: tikr
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create", "get", "list", "update", "delete"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "list", "update", "delete"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tikrb
+  namespace: tikns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io/v1
+  kind: Role
+  name: tikr
+subjects:
+- kind: ServiceAccount
+  name: tiksa
+  namespace: tikns
+---
+

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"os"
 	"os/signal"
 	"syscall"
@@ -29,10 +28,6 @@ func main() {
 	)
 
 	logger.Debugf("Starting the controller...")
-
-	// Get the kubeConfig file and then build the restConfig
-	kubeConfig := flag.String("kubeconfig", "/home/chinmay/.kube/config", "kubeconfig file")
-	flag.Parse()
 
 	restConfig, errKubeConfig = rest.InClusterConfig()
 	if errKubeConfig != nil {

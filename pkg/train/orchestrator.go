@@ -102,7 +102,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, TrainInKube *traini
 		for j := 0; j < numberOfMiniBatches; j++ {
 			created_jobs := make([]*batchv1.Job, 6)
 			for k := 0; k < 6; k++ {
-=				volume := resources.CreateHostPathVolume(TrainInKube.Name+"volume", "/data")
+				volume := resources.CreateHostPathVolume(TrainInKube.Name+"volume", "/data")
 				volumeMount := resources.CreateVolumeMount(TrainInKube.Name+"volume", "/data")
 				envVariables := map[string]string{
 					"MODEL_LOCATION":    "/data/model.h5",
