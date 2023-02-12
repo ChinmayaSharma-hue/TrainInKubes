@@ -119,16 +119,16 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 				created_jobs[j] = created_job
 			}
 			// Wait until the execution of all the jobs finishes using go routines
-			doneCh := make(chan error, 6)
-			for _, job := range created_jobs {
-				go waitForJobToFinish(job, t.jobInformer, doneCh)
-			}
-			for l := 0; l < 6; l++ {
-				err := <-doneCh
-				if err != nil {
-					return err
-				}
-			}
+			// doneCh := make(chan error, 6)
+			// for _, job := range created_jobs {
+			// 	go waitForJobToFinish(job, t.jobInformer, doneCh)
+			// }
+			// for l := 0; l < 6; l++ {
+			// 	err := <-doneCh
+			// 	if err != nil {
+			// 		return err
+			// 	}
+			// }
 
 			t.logger.Infof("Finished executing all the jobs for epoch %d", i)
 
