@@ -22,10 +22,9 @@ var (
 )
 
 type TrainOrchestrator struct {
-	kubeClientSet kubernetes.Interface
+	KubeClientSet kubernetes.Interface
 	trainInKube   *traininkubev1alpha1.TrainInKube
 	jobInformer   cache.SharedIndexInformer
-	nodeInformer  cache.SharedIndexInformer
 
 	namespace string
 

@@ -69,7 +69,7 @@ func (c *Controller) processItem(ctx context.Context, obj interface{}) error {
 
 func (c *Controller) processAddTrainInKube(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
 	// configmap := createConfigMap(trainInKube, c.namespace)
-	data = map[string]string{
+	data := map[string]string{
 		"epochs":                      string(trainInKube.Spec.Epochs),
 		"batchSize":                   string(trainInKube.Spec.BatchSize),
 		"numberOfSamples":             strconv.Itoa(trainInKube.Spec.NumberOfSamples),
@@ -113,19 +113,19 @@ func (c *Controller) processAddConfigMap(
 	// Query the kubernetes server for the ConfigMap
 	// If the ConfigMap is not found, requeue the event
 	// If the ConfigMap is found, create a Job to build the model
-	configmap, err := c.kubeClientSet.CoreV1().ConfigMaps(c.namespace).Get(ctx, trainInKube.Name, metav1.GetOptions{})
+	_, err := c.kubeClientSet.CoreV1().ConfigMaps(c.namespace).Get(ctx, trainInKube.Name, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("Error while getting the ConfigMap: %v", err)
 	}
 
 	// Create a Job to build the model
 	// job := createJob(trainInKube, configmap, c.namespace)
-	volume := resources.CreateHostPathVolume(trainInKube.name+"volume", "/data")
-	volumeMount := resources.CreateVolumeMount(trainInKube.name+"volume", "/data")
+	volume := resources.CreateHostPathVolume(trainInKube.Name+"volume", "/data")
+	volumeMount := resources.CreateVolumeMount(trainInKube.Name+"volume", "/data")
 	envVariables := map[string]string{
 		"MODEL_STORAGE_LOCATION": "/data",
 	}
-	ownerReference := resources.createOwnerReference(trainInKube)
+	ownerReference := resources.CreateOwnerReference(trainInKube)
 
 	job := resources.CreateJob(
 		resources.CreateJobWithName(trainInKube.Name+"buildmodel"),
@@ -164,10 +164,9 @@ func (c *Controller) processAddBuildModel(ctx context.Context, trainInKube *trai
 	// Create another struct that will be used to scale the jobs for training, monitors
 	// the resources available in the cluster, and periodically triggers the splitting job.
 	torch := &train.TrainOrchestrator{
-		kubeClientSet: c.kubeClientSet,
+		KubeClientSet: c.kubeClientSet,
 		trainInKube:   trainInKube,
 		jobInformer:   c.jobInformer,
-		nodeInformer:  c.nodeInformer,
 		namespace:     c.namespace,
 		logger:        c.logger,
 	}
