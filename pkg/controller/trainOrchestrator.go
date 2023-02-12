@@ -67,7 +67,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 
 	// Block the function till the job finishes execution
 	errorCh := make(chan error)
-	_, err := cache.MetaNamespaceKeyFunc(created_job)
+	_, err = cache.MetaNamespaceKeyFunc(created_job)
 	go waitForJobToFinish(created_job, t.jobInformer, errorCh)
 	err = <-errorCh
 	if err != nil {
