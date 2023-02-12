@@ -50,16 +50,16 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	// Find a way to use the same function or something to create jobs that
 	// creates different job objects based on the options passed to it
 	// job := createSplitJob(t.trainInKube, strconv.Itoa(6), configmap, t.namespace)
-	volume := resources.createHostPathVolume(trainInKube.name + "volume", "/data")
-	volumeMount := resources.createVolumeMount(trainInKube.name + "volume", "/data")
+	volume := resources.createHostPathVolume(trainInKube.name+"volume", "/data")
+	volumeMount := resources.createVolumeMount(trainInKube.name+"volume", "/data")
 	envVariables := map[string]string{
-		"DIVISIONS": "strconv.Itoa(6)",
+		"DIVISIONS":        "strconv.Itoa(6)",
 		"DATASET_LOCATION": "/data/PreprocessedData",
-		"SPLIT_LOCATION": "/data/Chunks"
+		"SPLIT_LOCATION":   "/data/Chunks",
 	}
 
 	job := resources.CreateJob(
-		resources.createJobWithName(trainInKube.Name + "splitdata"),
+		resources.createJobWithName(trainInKube.Name+"splitdata"),
 		resources.createJobWithImage("splitjob:latest"),
 		resources.createJobInNamespace(c.namespace),
 		resources.createJobWithVolume(volume),
@@ -115,28 +115,26 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 			created_jobs := make([]*batchv1.Job, 6)
 			for k := 0; k < 6; k++ {
 				// job := createTrainJob(t.trainInKube, t.namespace, k, startingIndex, endingIndex)
-				volume := resources.createHostPathVolume(trainInKube.name + "volume", "/data")
-				volumeMount := resources.createVolumeMount(trainInKube.name + "volume", "/data")
+				volume := resources.createHostPathVolume(trainInKube.name+"volume", "/data")
+				volumeMount := resources.createVolumeMount(trainInKube.name+"volume", "/data")
 				envVariables := map[string]string{
-					"MODEL_LOCATION": "/data/model.h5",
+					"MODEL_LOCATION":    "/data/model.h5",
 					"GRADIENT_LOCATION": "/data/Gradients",
 					"FEATURES_LOCATION": "/data/Chunks/x_train_" + strconv.Itoa(k) + ".npy",
-					"LABELS_LOCATION": "/data/Chunks/y_train_" + strconv.Itoa(k) + ".npy",
-					"STARTING_INDEX": strconv(startingIndex),
-					"ENDING_INDEX": strconv(endingIndex),
-					"JOB_INDEX": strconv.Itoa(k),
+					"LABELS_LOCATION":   "/data/Chunks/y_train_" + strconv.Itoa(k) + ".npy",
+					"STARTING_INDEX":    strconv(startingIndex),
+					"ENDING_INDEX":      strconv(endingIndex),
+					"JOB_INDEX":         strconv.Itoa(k),
 				}
-			
+
 				job := resources.CreateJob(
-					resources.createJobWithName(trainInKube.Name + "traimodel" + strconv.Itoa(k)),
+					resources.createJobWithName(trainInKube.Name+"traimodel"+strconv.Itoa(k)),
 					resources.createJobWithImage("trainjob:latest"),
 					resources.createJobInNamespace(c.namespace),
 					resources.createJobWithVolume(volume),
 					resources.createJobWithVolumeMounts(volumeMount),
 					resources.createJobWithEnv(envVariables),
 				)
-			
-
 
 				exists, err := resourceExists(job, t.jobInformer.GetIndexer())
 				if err != nil {
@@ -188,23 +186,22 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 
 			// Create a job that averages over all the gradients
 			// job := createModelUpdateJob(t.trainInKube, strconv.Itoa(6), t.namespace)
-			volume := resources.createHostPathVolume(trainInKube.name + "volume", "/data")
-			volumeMount := resources.createVolumeMount(trainInKube.name + "volume", "/data")
+			volume := resources.createHostPathVolume(trainInKube.name+"volume", "/data")
+			volumeMount := resources.createVolumeMount(trainInKube.name+"volume", "/data")
 			envVariables := map[string]string{
-				"MODEL_LOCATION": "/data/model.h5",
+				"MODEL_LOCATION":    "/data/model.h5",
 				"GRADIENT_LOCATION": "/data/Gradients",
-				"NUMBER_OF_GRADS": strconv.Itoa(6),
+				"NUMBER_OF_GRADS":   strconv.Itoa(6),
 			}
-		
+
 			job := resources.CreateJob(
-				resources.createJobWithName(trainInKube.Name + "updatemodel"),
+				resources.createJobWithName(trainInKube.Name+"updatemodel"),
 				resources.createJobWithImage("modelupdatejob:latest"),
 				resources.createJobInNamespace(c.namespace),
 				resources.createJobWithVolume(volume),
 				resources.createJobWithVolumeMounts(volumeMount),
 				resources.createJobWithEnv(envVariables),
 			)
-		
 
 			exists, err := resourceExists(job, t.jobInformer.GetIndexer())
 			if err != nil {

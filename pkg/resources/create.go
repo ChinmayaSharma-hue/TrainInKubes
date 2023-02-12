@@ -9,7 +9,7 @@ func CreateJob(options ...CreateOption) err {
 		Name: "defaultjobname",
 		ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
 		Labels: make(map[string]string),
-		Namespace: "default"
+		Namespace: "default",
 		Volumes: make([]corev1.Volume),
 		Env: make([]corev1.EnvVar)
 	}
@@ -67,7 +67,7 @@ func CreateConfigMap(options ...CreateOption) err {
 	cmopts := &ConfigMapOptions{
 		Name: "defaultcmname",
 		Data: make(map[string]string),
-		Namespace: "default"
+		Namespace: "default",
 	}
 
 	return CreateConfigMapWithOptions(cmopts)
