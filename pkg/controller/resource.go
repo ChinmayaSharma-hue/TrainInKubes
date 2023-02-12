@@ -23,6 +23,7 @@ func createConfigMap(trainInKube *traininkubev1alpha1.TrainInKube, namespace str
 		Data: map[string]string{
 			"epochs":                      string(trainInKube.Spec.Epochs),
 			"batchSize":                   string(trainInKube.Spec.BatchSize),
+			"numberOfSamples":             strconv.Itoa(trainInKube.Spec.NumberOfSamples),
 			"preprocessedDatasetLocation": trainInKube.Spec.PreprocessedDataLocation,
 			"splitDatasetLocation":        trainInKube.Spec.SplitDatasetLocation,
 			"modelsLocation":              trainInKube.Spec.ModelsLocation,

@@ -20,6 +20,7 @@ type TrainInKubeSpec struct {
 	ModelImagePullPolicy     string `json:"modelImagepullpolicy, omitempty`
 	Epochs                   int    `json:"epochs, omitempty"`
 	BatchSize                int    `json:"batchSize, omitempty"`
+	NumberOfSamples          int    `json:"numberOfSamples, omitempty"`
 	PreprocessedDataLocation string `json:"preprocessedDataLocation, omitempty"`
 	SplitDatasetLocation     string `json:"splitDatasetLocation, omitempty"`
 	ModelsLocation           string `json:"modelsLocation, omitempty"`

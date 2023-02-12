@@ -23,6 +23,8 @@ spec:
                   type: integer
                 batchSize:
                   type: integer
+                numberOfSamples:
+                  type: integer
                 preprocessedDatasetLocation:
                   type: string
                 splitDatasetLocation:
@@ -34,6 +36,8 @@ spec:
                   - modelImage
                   - modelImagePullPolicy
                   - epochs
+                  - batchSize
+                  - numberOfSamples
                   - preprocessedDatasetLocation
                   - splitDatasetLocation
                   - modelsLocation
