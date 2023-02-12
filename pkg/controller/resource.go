@@ -264,6 +264,82 @@ func createTrainJobSpec(
 			},
 		},
 	}
+}
+
+func createModelUpdateJob(
+	trainInKube *traininkubev1alpha1.TrainInKube, 
+	NumberOfJobs string, 
+	namespace string
+	) *batchv1.Job {
+	return &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			// Concatenate the trainInKube name and the string "_build_model" to create the job name
+			Name:      trainInKube.ObjectMeta.Name + "updatemodel",
+			Namespace: namespace,
+			Labels:    make(map[string]string),
+			OwnerReferences: []metav1.OwnerReference{
+				*metav1.NewControllerRef(trainInKube, NumberOfJobs, traininkubev1alpha1.SchemeGroupVersion.WithKind("TrainInKube")),
+			},
+		},
+		Spec: createModelUpdateJobSpec(trainInKube, namespace),
+	}
+}
+
+func createModelUpdateJobSpec(
+	trainInKube *traininkubev1alpha1.TrainInKube, 
+	NumberOfJobs string, 
+	namespace string
+	) batchv1.JobSpec {
+	return batchv1.JobSpec{
+		Template: corev1.PodTemplateSpec{
+			ObjectMeta: metav1.ObjectMeta{
+				GenerateName: trainInKube.Name + "-",
+				Namespace:    namespace,
+				Labels:       make(map[string]string),
+			},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name:  trainInKube.Name,
+						Image: "modelupdatejob:latest",
+						// TODO : Have to remove the hardcoding of ImagePullPolicy later
+						ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								Name:      trainInKube.Name + "volume",
+								MountPath: "/data",
+							},
+						},
+						Env: []corev1.EnvVar{
+							{
+								Name:  "MODEL_LOCATION",
+								Value: "/data/model.h5",
+							},
+							{
+								Name:  "GRADIENT_LOCATION",
+								Value: "/data/Gradients",
+							},
+							{
+								Name:  "NUMBER_OF_GRADS",
+								Value: NumberOfJobs,
+							},
+						},
+					},
+				},
+				Volumes: []corev1.Volume{
+					{
+						Name: trainInKube.Name + "volume",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/data",
+							},
+						},
+					},
+				},
+				RestartPolicy: corev1.RestartPolicyNever,
+			},
+		},
+	}
 
 }
 

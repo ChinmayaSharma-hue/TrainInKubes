@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -48,7 +49,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	// Create a job that divides the data between the jobs
 	// Find a way to use the same function or something to create jobs that
 	// creates different job objects based on the options passed to it
-	job := createSplitJob(t.trainInKube, strconv.Itoa(5), configmap, t.namespace)
+	job := createSplitJob(t.trainInKube, strconv.Itoa(2), configmap, t.namespace)
 
 	exists, err := resourceExists(job, t.jobInformer.GetIndexer())
 	if err != nil {
@@ -65,11 +66,11 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	}
 
 	// Block the function till the job finishes execution
-	wg.Add(1)
-	go waitForJobToFinish(created_job, t.jobInformer)
-	wg.Wait()
+	errorCh := make(chan error)
+	go waitForJobToFinish(created_job, t.jobInformer, errorCh)
+	err = <-errorCh
 	if err != nil {
-		return fmt.Errorf("Error while waiting for the Job to finish: %v", err)
+		return err
 	}
 
 	// Use the job informer to keep track of the job
@@ -80,7 +81,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	// to take from the data, performs feedforward and backpropagation on the
 	// data it takes, and then stores the gradient in a specified location.
 
-	// Create a loop that runs for the number of epochs, creating 5 jobs for
+	// Create a loop that runs for the number of epochs, creating 2 jobs for
 	// each epoch, and then after each epoch, create a job that takes in the
 	// gradients from each of the jobs and then performs averaging, finds the
 	// average gradient, and then updates the weights.
@@ -88,9 +89,9 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	endingIndex := 2
 	for i := 0; i < 1; i++ {
 		// Create a slice of jobs that will be created for each epoch
-		created_jobs := make([]*batchv1.Job, 5)
+		created_jobs := make([]*batchv1.Job, 2)
 
-		for j := 0; j < 5; j++ {
+		for j := 0; j < 2; j++ {
 			job := createTrainJob(t.trainInKube, t.namespace, j, startingIndex, endingIndex)
 
 			exists, err := resourceExists(job, t.jobInformer.GetIndexer())
@@ -106,48 +107,77 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 			if err != nil {
 				return fmt.Errorf("Error while creating the Job: %v", err)
 			}
-			fmt.Println("Job Created!")
 			// Add the job to the slice of jobs
 			created_jobs[j] = created_job
 		}
 
 		// Wait until the execution of all the jobs finishes using go routines
-		wg.Add(5)
+		doneCh := make(chan error, 2)
+
 		for _, job := range created_jobs {
-			go waitForJobToFinish(job, t.jobInformer)
+			go waitForJobToFinish(job, t.jobInformer, doneCh)
 		}
-		wg.Wait()
+
+		for i := 0; i < 2; i++ {
+			err := <-doneCh
+			if err != nil {
+				return err
+			}
+		}
 
 		t.logger.Infof("Finished executing all the jobs for epoch %d", i)
+
+		// Delete all the jobs that were created for the epoch
+		for _, job := range created_jobs {
+			err := t.kubeClientSet.BatchV1().Jobs(t.namespace).Delete(ctx, job.Name, metav1.DeleteOptions{})
+			if err != nil {
+				return fmt.Errorf("Error while deleting the Job: %v", err)
+			}
+		}
+
+		// Create a job that averages over all the gradients
+		// job := createModelUpdateJob(t.trainInKube, strconv.Itoa(2), t.namespace)
+
+		// exists, err := resourceExists(job, t.jobInformer.GetIndexer())
+		// if err != nil {
+		// 	return fmt.Errorf("Error while checking if the Job already exists: %v", err)
+		// }
+		// if exists {
+		// 	t.logger.Infof("Job already exists, skipping creation")
+		// 	return nil
+		// }
+
+		// created_job, err := t.kubeClientSet.BatchV1().Jobs(t.namespace).Create(ctx, job, metav1.CreateOptions{})
+		// if err != nil {
+		// 	return fmt.Errorf("Error while creating the Job: %v", err)
+		// }
 	}
 
 	// After the job finishes execution, do the same thing again from the start.
 	return nil
 }
 
-func waitForJobToFinish(job *batchv1.Job, jobInformer cache.SharedIndexInformer) {
-	defer wg.Done()
-
+func waitForJobToFinish(job *batchv1.Job, jobInformer cache.SharedIndexInformer, errorCh chan error) {
 	key, err := cache.MetaNamespaceKeyFunc(job)
 
 	if err != nil {
-		fmt.Errorf("Error while getting the key for the job: %v", err)
+		errorCh <- err
 	}
 
 	for {
 		jobObject, exists, err := jobInformer.GetIndexer().GetByKey(key)
 		if err != nil {
-			fmt.Errorf("Error while getting the job object from the informer: %v", err)
+			errorCh <- err
 		}
 		if exists {
 			job, ok := jobObject.(*batchv1.Job)
 			if !ok {
-				fmt.Errorf("Error while converting the job object to job type")
+				errorCh <- errors.New("Error while converting the job object to job type")
 			}
 			if job.Status.Succeeded == 1 {
-				return
+				errorCh <- nil
 			} else if job.Status.Failed == 1 {
-				fmt.Errorf("Job failed")
+				errorCh <- errors.New("Job failed")
 			}
 		}
 	}
