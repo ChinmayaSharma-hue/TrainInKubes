@@ -1,5 +1,10 @@
 package resources
 
+import (
+	traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 type CreateConfigMapOption interface {
 	apply(*ConfigMapOptions) error
 }
@@ -29,4 +34,15 @@ func CreateCMInNamespace(namespace string) CreateConfigMapOption {
 		co.Namespace = namespace
 		return nil
 	})
+}
+
+func createCMWithOwnerReference(ownerReference metav1.OwnerReference) CreateJobOption {
+	return createJobOptionAdapter(func(j *JobOptions) error {
+		append(co.OwnerReferences, ownerReference)
+		return nil
+	})
+}
+
+func createOwnerReference(trainInKube *traininkubev1alpha1) metav1.OwnerReference {
+	return *metav1.NewControllerRef(trainInKube, traininkubev1alpha1.SchemeGroupVersion.WithKind("TrainInKube"))
 }

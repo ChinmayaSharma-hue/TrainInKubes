@@ -3,10 +3,11 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
-	"github.com/ChinmayaSharma-hue/TrainInKubes/pkg/train"
 	"github.com/ChinmayaSharma-hue/TrainInKubes/pkg/resources"
+	"github.com/ChinmayaSharma-hue/TrainInKubes/pkg/train"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -76,11 +77,13 @@ func (c *Controller) processAddTrainInKube(ctx context.Context, trainInKube *tra
 		"splitDatasetLocation":        trainInKube.Spec.SplitDatasetLocation,
 		"modelsLocation":              trainInKube.Spec.ModelsLocation,
 	}
+	ownerReference := resources.createOwnerReference(trainInKube)
 
 	configmap := resources.CreateConfigMap(
 		resources.CreateCMWithName(trainInKube.Name),
 		resources.CreateCMWithData(data),
-		resources.CreateCMInNamespace(c.namespace)
+		resources.CreateCMInNamespace(c.namespace),
+		resources.createCMWithOwnerReference(ownerReference),
 	)
 
 	exists, err := resourceExists(configmap, c.configmapInformer.GetIndexer())
@@ -117,19 +120,21 @@ func (c *Controller) processAddConfigMap(
 
 	// Create a Job to build the model
 	// job := createJob(trainInKube, configmap, c.namespace)
-	volume := resources.createHostPathVolume(trainInKube.name + "volume", "/data")
-	volumeMount := resources.createVolumeMount(trainInKube.name + "volume", "/data")
+	volume := resources.createHostPathVolume(trainInKube.name+"volume", "/data")
+	volumeMount := resources.createVolumeMount(trainInKube.name+"volume", "/data")
 	envVariables := map[string]string{
 		"MODEL_STORAGE_LOCATION": "/data",
 	}
+	ownerReference := resources.createOwnerReference(trainInKube)
 
 	job := resources.CreateJob(
-		resources.createJobWithName(trainInKube.Name + "buildmodel"),
+		resources.createJobWithName(trainInKube.Name+"buildmodel"),
 		resources.createJobWithImage("buildjob:latest"),
 		resources.createJobInNamespace(c.namespace),
 		resources.createJobWithVolume(volume),
 		resources.createJobWithVolumeMounts(volumeMount),
 		resources.createJobWithEnv(envVariables),
+		resources.createJobWithOwnerReference(ownerReference),
 	)
 
 	exists, err := resourceExists(job, c.jobInformer.GetIndexer())

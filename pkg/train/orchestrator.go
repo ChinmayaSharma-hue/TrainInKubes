@@ -58,6 +58,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 		"DATASET_LOCATION": "/data/PreprocessedData",
 		"SPLIT_LOCATION":   "/data/Chunks",
 	}
+	ownerReference := resources.createOwnerReference(trainInKube)
 
 	job := resources.CreateJob(
 		resources.createJobWithName(trainInKube.Name+"splitdata"),
@@ -66,6 +67,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 		resources.createJobWithVolume(volume),
 		resources.createJobWithVolumeMounts(volumeMount),
 		resources.createJobWithEnv(envVariables),
+		resources.createJobWithOwnerReference(ownerReference),
 	)
 
 	exists, err := resourceExists(job, t.jobInformer.GetIndexer())
@@ -127,6 +129,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 					"ENDING_INDEX":      strconv(endingIndex),
 					"JOB_INDEX":         strconv.Itoa(k),
 				}
+				ownerReference := resources.createOwnerReference(trainInKube)
 
 				job := resources.CreateJob(
 					resources.createJobWithName(trainInKube.Name+"traimodel"+strconv.Itoa(k)),
@@ -135,6 +138,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 					resources.createJobWithVolume(volume),
 					resources.createJobWithVolumeMounts(volumeMount),
 					resources.createJobWithEnv(envVariables),
+					resources.createJobWithOwnerReference(ownerReference),
 				)
 
 				exists, err := resourceExists(job, t.jobInformer.GetIndexer())
@@ -194,6 +198,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 				"GRADIENT_LOCATION": "/data/Gradients",
 				"NUMBER_OF_GRADS":   strconv.Itoa(6),
 			}
+			ownerReference := resources.createOwnerReference(trainInKube)
 
 			job := resources.CreateJob(
 				resources.createJobWithName(trainInKube.Name+"updatemodel"),
@@ -202,6 +207,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 				resources.createJobWithVolume(volume),
 				resources.createJobWithVolumeMounts(volumeMount),
 				resources.createJobWithEnv(envVariables),
+				resources.createJobWithOwnerReference(ownerReference),
 			)
 
 			exists, err := resourceExists(job, t.jobInformer.GetIndexer())

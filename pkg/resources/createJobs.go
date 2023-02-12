@@ -1,6 +1,10 @@
 package resources
 
-import corev1 "k8s.io/api/core/v1"
+import (
+	traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 type CreateJobOption interface {
 	apply(*JobOptions) error
@@ -49,14 +53,14 @@ func createJobInNamespace(namespace string) CreateJobOption {
 
 func createJobWithVolume(volume corev1.Volume) CreateJobOption {
 	return createJobOptionAdapter(func(j *JobOptions) error {
-		append(j.Volumes, volume)
+		j.Volumes = append(j.Volumes, volume)
 		return nil
 	})
 }
 
 func createJobWithVolumeMounts(volumeMount corev1.VolumeMount) CreateJobOption {
 	return createJobOptionAdapter(func(j *JobOptions) error {
-		append(j.VolumeMounts, volumeMount)
+		j.VolumeMounts = append(j.VolumeMounts, volumeMount)
 		return nil
 	})
 }
@@ -68,10 +72,21 @@ func createJobWithEnv(envVariables map[string]string) CreateJobOption {
 				Name:  key,
 				Value: val,
 			}
-			append(j.Env, envVar)
+			j.Env = append(j.Env, envVar)
 		}
 		return nil
 	})
+}
+
+func createJobWithOwnerReference(ownerReference metav1.OwnerReference) CreateJobOption {
+	return createJobOptionAdapter(func(j *JobOptions) error {
+		j.OwnerReferences = append(j.OwnerReferences, ownerReference)
+		return nil
+	})
+}
+
+func createOwnerReference(trainInKube *traininkubev1alpha1) metav1.OwnerReference {
+	return *metav1.NewControllerRef(trainInKube, traininkubev1alpha1.SchemeGroupVersion.WithKind("TrainInKube"))
 }
 
 func createHostPathVolume(name string, path string) corev1.Volume {

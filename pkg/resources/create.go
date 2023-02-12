@@ -6,11 +6,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreateJob(options ...CreateJobOption) error {
+func CreateJob(options ...CreateJobOption) *batchv1.Job {
 	jopts := &JobOptions{
 		Name:            "defaultjobname",
 		ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
 		Labels:          make(map[string]string),
+		OwnerReferences: make([]metav1.OwnerReference, 5),
 		Namespace:       "default",
 		Volumes:         make([]corev1.Volume, 5),
 		Env:             make([]corev1.EnvVar, 10),
@@ -29,12 +30,10 @@ func CreateJobWithOptions(jopts *JobOptions) *batchv1.Job {
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			// Concatenate the trainInKube name and the string "_build_model" to create the job name
-			Name:      jopts.Name,
-			Namespace: jopts.Namespace,
-			Labels:    jopts.Labels,
-			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(trainInKube, traininkubev1alpha1.SchemeGroupVersion.WithKind("TrainInKube")),
-			},
+			Name:            jopts.Name,
+			Namespace:       jopts.Namespace,
+			Labels:          jopts.Labels,
+			OwnerReferences: jopts.OwnerReference,
 		},
 		Spec: CreateJobSpecWithOptions(jopts),
 	}
@@ -67,9 +66,10 @@ func CreateJobSpecWithOptions(jopts *JobOptions) batchv1.JobSpec {
 
 func CreateConfigMap(options ...CreateConfigMapOption) error {
 	cmopts := &ConfigMapOptions{
-		Name:      "defaultcmname",
-		Data:      make(map[string]string),
-		Namespace: "default",
+		Name:            "defaultcmname",
+		Data:            make(map[string]string),
+		Namespace:       "default",
+		OwnerReferences: make([]metav1.OwnerReference, 5),
 	}
 
 	return CreateConfigMapWithOptions(cmopts)
@@ -78,22 +78,11 @@ func CreateConfigMap(options ...CreateConfigMapOption) error {
 func CreateConfigMapWithOptions(cmopts *ConfigMapOptions) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cmopts.Name,
-			Namespace: cmopts.Namespace,
-			Labels:    cmopts.Labels,
-			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(trainInKube, traininkubev1alpha1.SchemeGroupVersion.WithKind("TrainInKube")),
-			},
+			Name:            cmopts.Name,
+			Namespace:       cmopts.Namespace,
+			Labels:          make(map[string]string),
+			OwnerReferences: cmopts.OwnerReferences,
 		},
 		Data: cmopts.Data,
 	}
 }
-
-//map[string]string{
-// 	"epochs":                      string(trainInKube.Spec.Epochs),
-// 	"batchSize":                   string(trainInKube.Spec.BatchSize),
-// 	"numberOfSamples":             strconv.Itoa(trainInKube.Spec.NumberOfSamples),
-// 	"preprocessedDatasetLocation": trainInKube.Spec.PreprocessedDataLocation,
-// 	"splitDatasetLocation":        trainInKube.Spec.SplitDatasetLocation,
-// 	"modelsLocation":              trainInKube.Spec.ModelsLocation,
-// }
