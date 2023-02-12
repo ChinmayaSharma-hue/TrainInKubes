@@ -41,7 +41,7 @@ func (t *TrainOrchestrator) Run(ctx context.Context, trainInKube *traininkubev1a
 }
 
 func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traininkubev1alpha1.TrainInKube) error {
-	_, err := t.kubeClientSet.CoreV1().ConfigMaps(t.namespace).Get(ctx, trainInKube.Name, metav1.GetOptions{})
+	_, err := t.KubeClientSet.CoreV1().ConfigMaps(t.namespace).Get(ctx, trainInKube.Name, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("Error while getting the ConfigMap: %v", err)
 	}
@@ -79,7 +79,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 		return nil
 	}
 
-	created_job, err := t.kubeClientSet.BatchV1().Jobs(t.namespace).Create(ctx, job, metav1.CreateOptions{})
+	created_job, err := t.KubeClientSet.BatchV1().Jobs(t.namespace).Create(ctx, job, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("Error while creating the Job: %v", err)
 	}
@@ -150,7 +150,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 					return nil
 				}
 
-				created_job, err := t.kubeClientSet.BatchV1().Jobs(t.namespace).Create(ctx, job, metav1.CreateOptions{})
+				created_job, err := t.KubeClientSet.BatchV1().Jobs(t.namespace).Create(ctx, job, metav1.CreateOptions{})
 				if err != nil {
 					return fmt.Errorf("Error while creating the Job: %v", err)
 				}
@@ -173,7 +173,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 
 			// Delete all the jobs that were created for the minibatch
 			for _, job := range created_jobs {
-				err := t.kubeClientSet.BatchV1().Jobs(t.namespace).Delete(ctx, job.Name, metav1.DeleteOptions{})
+				err := t.KubeClientSet.BatchV1().Jobs(t.namespace).Delete(ctx, job.Name, metav1.DeleteOptions{})
 				if err != nil {
 					return fmt.Errorf("Error while deleting the Job: %v", err)
 				}
@@ -218,7 +218,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 				t.logger.Infof("Job already exists, skipping creation")
 				return nil
 			}
-			created_job, err := t.kubeClientSet.BatchV1().Jobs(t.namespace).Create(ctx, job, metav1.CreateOptions{})
+			created_job, err := t.KubeClientSet.BatchV1().Jobs(t.namespace).Create(ctx, job, metav1.CreateOptions{})
 			if err != nil {
 				return fmt.Errorf("Error while creating the Job: %v", err)
 			}
@@ -228,7 +228,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 				return err
 			}
 
-			err = t.kubeClientSet.BatchV1().Jobs(t.namespace).Delete(ctx, created_job.Name, metav1.DeleteOptions{})
+			err = t.KubeClientSet.BatchV1().Jobs(t.namespace).Delete(ctx, created_job.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return fmt.Errorf("Error while deleting the Job: %v", err)
 			}
