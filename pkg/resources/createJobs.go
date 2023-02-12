@@ -85,7 +85,7 @@ func createJobWithOwnerReference(ownerReference metav1.OwnerReference) CreateJob
 	})
 }
 
-func createOwnerReference(trainInKube *traininkubev1alpha1) metav1.OwnerReference {
+func createOwnerReference(trainInKube *traininkubev1alpha1.TrainInKube) metav1.OwnerReference {
 	return *metav1.NewControllerRef(trainInKube, traininkubev1alpha1.SchemeGroupVersion.WithKind("TrainInKube"))
 }
 

@@ -18,9 +18,7 @@ func CreateJob(options ...CreateJobOption) *batchv1.Job {
 	}
 
 	for _, o := range options {
-		if err := o.apply(jopts); err != nil {
-			return err
-		}
+		o.apply(jopts)
 	}
 
 	return CreateJobWithOptions(jopts)
@@ -33,7 +31,7 @@ func CreateJobWithOptions(jopts *JobOptions) *batchv1.Job {
 			Name:            jopts.Name,
 			Namespace:       jopts.Namespace,
 			Labels:          jopts.Labels,
-			OwnerReferences: jopts.OwnerReference,
+			OwnerReferences: jopts.OwnerReferences,
 		},
 		Spec: CreateJobSpecWithOptions(jopts),
 	}
@@ -64,12 +62,16 @@ func CreateJobSpecWithOptions(jopts *JobOptions) batchv1.JobSpec {
 	}
 }
 
-func CreateConfigMap(options ...CreateConfigMapOption) error {
+func CreateConfigMap(options ...CreateConfigMapOption) *corev1.ConfigMap {
 	cmopts := &ConfigMapOptions{
 		Name:            "defaultcmname",
 		Data:            make(map[string]string),
 		Namespace:       "default",
 		OwnerReferences: make([]metav1.OwnerReference, 5),
+	}
+
+	for _, o := range options {
+		o.apply(cmopts)
 	}
 
 	return CreateConfigMapWithOptions(cmopts)
