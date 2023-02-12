@@ -218,7 +218,7 @@ func waitForJobToBeDeleted(job *batchv1.Job, jobInformer cache.SharedIndexInform
 	}
 
 	for {
-		jobObject, exists, err := jobInformer.GetIndexer().GetByKey(key)
+		_, exists, err := jobInformer.GetIndexer().GetByKey(key)
 		if err != nil {
 			errorCh <- err
 		}
