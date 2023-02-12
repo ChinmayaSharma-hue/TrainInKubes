@@ -257,16 +257,20 @@ func waitForJobToFinish(job *batchv1.Job, JobInformer cache.SharedIndexInformer,
 		jobObject, exists, err := JobInformer.GetIndexer().GetByKey(key)
 		if err != nil {
 			errorCh <- err
+			break
 		}
 		if exists {
 			job, ok := jobObject.(*batchv1.Job)
 			if !ok {
 				errorCh <- errors.New("Error while converting the job object to job type")
+				break
 			}
 			if job.Status.Succeeded == 1 {
 				errorCh <- nil
+				break
 			} else if job.Status.Failed == 1 {
 				errorCh <- errors.New("Job failed")
+				break
 			}
 		}
 	}
@@ -277,15 +281,18 @@ func waitForJobToBeDeleted(job *batchv1.Job, JobInformer cache.SharedIndexInform
 
 	if err != nil {
 		errorCh <- err
+		break
 	}
 
 	for {
 		_, exists, err := JobInformer.GetIndexer().GetByKey(key)
 		if err != nil {
 			errorCh <- err
+			break
 		}
 		if !exists {
 			errorCh <- nil
+			break
 		}
 	}
 }
