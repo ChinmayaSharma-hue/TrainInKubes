@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	traininkubev1alpha1 "github.com/ChinmayaSharma-hue/TrainInKubes/pkg/apis/trainink8s/v1alpha1"
+	"github.com/ChinmayaSharma-hue/TrainInKubes/pkg/resources"
 	"github.com/gotway/gotway/pkg/log"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,8 +51,8 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	// Find a way to use the same function or something to create jobs that
 	// creates different job objects based on the options passed to it
 	// job := createSplitJob(t.trainInKube, strconv.Itoa(6), configmap, t.namespace)
-	volume := resources.createHostPathVolume(trainInKube.name+"volume", "/data")
-	volumeMount := resources.createVolumeMount(trainInKube.name+"volume", "/data")
+	volume := resources.createHostPathVolume(trainInKube.Name+"volume", "/data")
+	volumeMount := resources.createVolumeMount(trainInKube.Name+"volume", "/data")
 	envVariables := map[string]string{
 		"DIVISIONS":        "strconv.Itoa(6)",
 		"DATASET_LOCATION": "/data/PreprocessedData",
@@ -61,7 +62,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	job := resources.CreateJob(
 		resources.createJobWithName(trainInKube.Name+"splitdata"),
 		resources.createJobWithImage("splitjob:latest"),
-		resources.createJobInNamespace(c.namespace),
+		resources.createJobInNamespace(t.namespace),
 		resources.createJobWithVolume(volume),
 		resources.createJobWithVolumeMounts(volumeMount),
 		resources.createJobWithEnv(envVariables),
@@ -115,8 +116,8 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 			created_jobs := make([]*batchv1.Job, 6)
 			for k := 0; k < 6; k++ {
 				// job := createTrainJob(t.trainInKube, t.namespace, k, startingIndex, endingIndex)
-				volume := resources.createHostPathVolume(trainInKube.name+"volume", "/data")
-				volumeMount := resources.createVolumeMount(trainInKube.name+"volume", "/data")
+				volume := resources.createHostPathVolume(trainInKube.Name+"volume", "/data")
+				volumeMount := resources.createVolumeMount(trainInKube.Name+"volume", "/data")
 				envVariables := map[string]string{
 					"MODEL_LOCATION":    "/data/model.h5",
 					"GRADIENT_LOCATION": "/data/Gradients",
@@ -130,7 +131,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 				job := resources.CreateJob(
 					resources.createJobWithName(trainInKube.Name+"traimodel"+strconv.Itoa(k)),
 					resources.createJobWithImage("trainjob:latest"),
-					resources.createJobInNamespace(c.namespace),
+					resources.createJobInNamespace(t.namespace),
 					resources.createJobWithVolume(volume),
 					resources.createJobWithVolumeMounts(volumeMount),
 					resources.createJobWithEnv(envVariables),
@@ -186,8 +187,8 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 
 			// Create a job that averages over all the gradients
 			// job := createModelUpdateJob(t.trainInKube, strconv.Itoa(6), t.namespace)
-			volume := resources.createHostPathVolume(trainInKube.name+"volume", "/data")
-			volumeMount := resources.createVolumeMount(trainInKube.name+"volume", "/data")
+			volume := resources.createHostPathVolume(trainInKube.Name+"volume", "/data")
+			volumeMount := resources.createVolumeMount(trainInKube.Name+"volume", "/data")
 			envVariables := map[string]string{
 				"MODEL_LOCATION":    "/data/model.h5",
 				"GRADIENT_LOCATION": "/data/Gradients",
@@ -197,7 +198,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 			job := resources.CreateJob(
 				resources.createJobWithName(trainInKube.Name+"updatemodel"),
 				resources.createJobWithImage("modelupdatejob:latest"),
-				resources.createJobInNamespace(c.namespace),
+				resources.createJobInNamespace(t.namespace),
 				resources.createJobWithVolume(volume),
 				resources.createJobWithVolumeMounts(volumeMount),
 				resources.createJobWithEnv(envVariables),

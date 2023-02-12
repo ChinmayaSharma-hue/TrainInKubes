@@ -6,12 +6,12 @@ import (
 
 func CreateJob(options ...CreateOption) err {
 	jopts := &JobOptions{
-		Name: "defaultjobname",
+		Name:            "defaultjobname",
 		ImagePullPolicy: corev1.PullPolicy("IfNotPresent"),
-		Labels: make(map[string]string),
-		Namespace: "default",
-		Volumes: make([]corev1.Volume),
-		Env: make([]corev1.EnvVar)
+		Labels:          make(map[string]string),
+		Namespace:       "default",
+		Volumes:         make([]corev1.Volume),
+		Env:             make([]corev1.EnvVar),
 	}
 
 	for _, o := range options {
@@ -49,14 +49,14 @@ func CreateJobSpecWithOptions(jopts *JobOptions) batchv1.JobSpec {
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name:  jopts.Name,
-						Image: jopts.Image,
+						Name:            jopts.Name,
+						Image:           jopts.Image,
 						ImagePullPolicy: jopts.ImagePullPolicy,
-						VolumeMounts: jopts.VolumeMounts,
-						Env: jopts.Env,
+						VolumeMounts:    jopts.VolumeMounts,
+						Env:             jopts.Env,
 					},
 				},
-				Volumes: jopts.Volumes,
+				Volumes:       jopts.Volumes,
 				RestartPolicy: corev1.RestartPolicyNever,
 			},
 		},
@@ -65,8 +65,8 @@ func CreateJobSpecWithOptions(jopts *JobOptions) batchv1.JobSpec {
 
 func CreateConfigMap(options ...CreateOption) err {
 	cmopts := &ConfigMapOptions{
-		Name: "defaultcmname",
-		Data: make(map[string]string),
+		Name:      "defaultcmname",
+		Data:      make(map[string]string),
 		Namespace: "default",
 	}
 
