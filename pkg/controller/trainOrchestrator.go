@@ -67,6 +67,7 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 
 	// Block the function till the job finishes execution
 	errorCh := make(chan error)
+	_, err := cache.MetaNamespaceKeyFunc(created_job)
 	go waitForJobToFinish(created_job, t.jobInformer, errorCh)
 	err = <-errorCh
 	if err != nil {
@@ -188,8 +189,8 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	return nil
 }
 
-func waitForJobToFinish(obj interface{}, jobInformer cache.SharedIndexInformer, errorCh chan error) {
-	key, err := cache.MetaNamespaceKeyFunc(obj)
+func waitForJobToFinish(job *batchv1.Job, jobInformer cache.SharedIndexInformer, errorCh chan error) {
+	key, err := cache.MetaNamespaceKeyFunc(job)
 
 	if err != nil {
 		errorCh <- err
@@ -214,8 +215,8 @@ func waitForJobToFinish(obj interface{}, jobInformer cache.SharedIndexInformer, 
 	}
 }
 
-func waitForJobToBeDeleted(obj interface{}, jobInformer cache.SharedIndexInformer, errorCh chan error) {
-	key, err := cache.MetaNamespaceKeyFunc(obj)
+func waitForJobToBeDeleted(job *batchv1.Job, jobInformer cache.SharedIndexInformer, errorCh chan error) {
+	key, err := cache.MetaNamespaceKeyFunc(job)
 
 	if err != nil {
 		errorCh <- err
