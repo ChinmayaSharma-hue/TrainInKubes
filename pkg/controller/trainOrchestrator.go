@@ -66,13 +66,15 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	}
 
 	// Block the function till the job finishes execution
-	errorCh := make(chan error)
-	_, err = cache.MetaNamespaceKeyFunc(created_job)
-	go waitForJobToFinish(created_job, t.jobInformer, errorCh)
-	err = <-errorCh
-	if err != nil {
-		return err
-	}
+	// errorCh := make(chan error)
+	// go waitForJobToFinish(created_job, t.jobInformer, errorCh)
+	// err = <-errorCh
+	// if err != nil {
+	// 	return err
+	// }
+	wg.Add(1)
+	go dummyWaitForJobToFinish(created_job, t.jobInformer)
+	wg.Wait()
 
 	// Use the job informer to keep track of the job
 
@@ -120,16 +122,21 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 				created_jobs[j] = created_job
 			}
 			// Wait until the execution of all the jobs finishes using go routines
-			doneCh := make(chan error, 6)
+			// doneCh := make(chan error, 6)
+			// for _, job := range created_jobs {
+			// 	go waitForJobToFinish(job, t.jobInformer, doneCh)
+			// }
+			// for l := 0; l < 6; l++ {
+			// 	err := <-doneCh
+			// 	if err != nil {
+			// 		return err
+			// 	}
+			// }
+			wg.Add(6)
 			for _, job := range created_jobs {
-				go waitForJobToFinish(job, t.jobInformer, doneCh)
+				go dummyWaitForJobToFinish(job, t.jobInformer)
 			}
-			for l := 0; l < 6; l++ {
-				err := <-doneCh
-				if err != nil {
-					return err
-				}
-			}
+			wg.Wait()
 
 			t.logger.Infof("Finished executing all the jobs for epoch %d", i)
 
@@ -165,11 +172,16 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 			if err != nil {
 				return fmt.Errorf("Error while creating the Job: %v", err)
 			}
-			go waitForJobToFinish(created_job, t.jobInformer, errorCh)
-			err = <-errorCh
-			if err != nil {
-				return err
-			}
+			// go waitForJobToFinish(created_job, t.jobInformer, errorCh)
+			// err = <-errorCh
+			// if err != nil {
+			// 	return err
+			// }
+
+			wg.Add(1)
+			go dummyWaitForJobToFinish(created_job, t.jobInformer)
+			wg.Wait()
+
 			err = t.kubeClientSet.BatchV1().Jobs(t.namespace).Delete(ctx, created_job.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return fmt.Errorf("Error while deleting the Job: %v", err)
@@ -187,6 +199,34 @@ func (t *TrainOrchestrator) Orchestrate(ctx context.Context, trainInKube *traini
 	}
 	// After the job finishes execution, do the same thing again from the start.
 	return nil
+}
+
+func dummyWaitForJobToFinish(job *batchv1.Job, jobInformer cache.SharedIndexInformer) {
+	defer wg.Done()
+	key, err := cache.MetaNamespaceKeyFunc(job)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for {
+		jobObject, exists, err := jobInformer.GetIndexer().GetByKey(key)
+		if err != nil {
+			panic(err)
+		}
+		if exists {
+			job, ok := jobObject.(*batchv1.Job)
+			if !ok {
+				panic(errors.New("Error while converting the job object to job type"))
+			}
+			if job.Status.Succeeded == 1 {
+				return
+			} else if job.Status.Failed == 1 {
+				panic(errors.New("Job failed"))
+			}
+		}
+	}
+
 }
 
 func waitForJobToFinish(job *batchv1.Job, jobInformer cache.SharedIndexInformer, errorCh chan error) {
